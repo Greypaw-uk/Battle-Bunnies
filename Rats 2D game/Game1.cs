@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Rats_2D_game
 {
@@ -10,7 +11,7 @@ namespace Rats_2D_game
     {
         public Vector2 Position;
         public bool IsAlive;
-        public Color Color;
+        public Color Colour;
         public float Angle;
         public float Power;
     }
@@ -19,8 +20,8 @@ namespace Rats_2D_game
     {
         public float BirthTime;
         public float MaxAge;
-        public Vector2 OriginalPosition;
-        public Vector2 Acceleration;
+        public Vector2 OrginalPosition;
+        public Vector2 Accelaration;
         public Vector2 Direction;
         public Vector2 Position;
         public float Scaling;
@@ -30,11 +31,8 @@ namespace Rats_2D_game
     public class Game1 : Game
     {
         GraphicsDeviceManager graphics;
-        GraphicsDevice device;
-
         SpriteBatch spriteBatch;
-        SpriteFont font;
-
+        GraphicsDevice device;
         Texture2D backgroundTexture;
         Texture2D foregroundTexture;
         Texture2D carriageTexture;
@@ -43,30 +41,35 @@ namespace Rats_2D_game
         Texture2D smokeTexture;
         Texture2D groundTexture;
         Texture2D explosionTexture;
+        SpriteFont font;
+
+        private SoundEffect hitCannon;
+        private SoundEffect hitTerrain;
+        private SoundEffect launch;
 
         int screenWidth;
         int screenHeight;
+
         PlayerData[] players;
         int numberOfPlayers = 4;
         float playerScaling;
         int currentPlayer = 0;
+
         bool rocketFlying = false;
         Vector2 rocketPosition;
         Vector2 rocketDirection;
         float rocketAngle;
         float rocketScaling = 0.1f;
 
-        List<Vector2> smokeList = new List<Vector2>();
-        Random randomiser = new Random();
-
-        List<ParticleData> particleList = new List<ParticleData>();
-
+        List<Vector2> smokeList = new List<Vector2>(); Random randomiser = new Random();
         int[] terrainContour;
-
         Color[,] rocketColourArray;
         Color[,] foregroundColourArray;
         Color[,] carriageColourArray;
         Color[,] cannonColourArray;
+
+        List<ParticleData> particleList = new List<ParticleData>();
+        Color[,] explosionColourArray;
 
         public Game1()
         {
@@ -80,7 +83,7 @@ namespace Rats_2D_game
             graphics.PreferredBackBufferHeight = 500;
             graphics.IsFullScreen = false;
             graphics.ApplyChanges();
-            Window.Title = "Rats 2D Battle Game";
+            Window.Title = "Rat's 2D Battle Game";
 
             base.Initialize();
         }
@@ -103,7 +106,7 @@ namespace Rats_2D_game
             for (int i = 0; i < numberOfPlayers; i++)
             {
                 players[i].IsAlive = true;
-                players[i].Color = playerColors[i];
+                players[i].Colour = playerColors[i];
                 players[i].Angle = MathHelper.ToRadians(90);
                 players[i].Power = 100;
                 players[i].Position = new Vector2();
@@ -117,29 +120,42 @@ namespace Rats_2D_game
             spriteBatch = new SpriteBatch(GraphicsDevice);
             device = graphics.GraphicsDevice;
 
+            font = Content.Load<SpriteFont>("myFont");
+
             backgroundTexture = Content.Load<Texture2D>("background");
             carriageTexture = Content.Load<Texture2D>("carriage");
             cannonTexture = Content.Load<Texture2D>("cannon");
             rocketTexture = Content.Load<Texture2D>("rocket");
             smokeTexture = Content.Load<Texture2D>("smoke");
-            font = Content.Load<SpriteFont>("myFont");
             groundTexture = Content.Load<Texture2D>("foreground");
             explosionTexture = Content.Load<Texture2D>("explosion");
 
             screenWidth = device.PresentationParameters.BackBufferWidth;
             screenHeight = device.PresentationParameters.BackBufferHeight;
-
-            GenerateTerrainContour();
-
-            SetUpPlayers();
             playerScaling = 40.0f / (float)carriageTexture.Width;
 
+            GenerateTerrainContour();
+            SetUpPlayers();
             FlattenTerrainBelowPlayers();
             CreateForeground();
 
             rocketColourArray = TextureTo2DArray(rocketTexture);
             carriageColourArray = TextureTo2DArray(carriageTexture);
             cannonColourArray = TextureTo2DArray(cannonTexture);
+
+            explosionColourArray = TextureTo2DArray(explosionTexture);
+
+            hitCannon = Content.Load<SoundEffect>("hitcannon");
+            hitTerrain = Content.Load<SoundEffect>("hitterrain");
+            launch = Content.Load<SoundEffect>("launch");
+        }
+
+        private void FlattenTerrainBelowPlayers()
+        {
+            foreach (PlayerData player in players)
+                if (player.IsAlive)
+                    for (int x = 0; x < 40; x++)
+                        terrainContour[(int)player.Position.X + x] = terrainContour[(int)player.Position.X];
         }
 
         private void GenerateTerrainContour()
@@ -164,41 +180,39 @@ namespace Rats_2D_game
             }
         }
 
-        private void FlattenTerrainBelowPlayers()
-        {
-            foreach (PlayerData player in players)
-            {
-                if (player.IsAlive)
-                {
-                    for (int x = 0; x < 40; x++)
-                    {
-                        terrainContour[(int)player.Position.X + x] = terrainContour[(int)player.Position.X];
-                    }
-                }
-            }
-        }
-
         private void CreateForeground()
         {
-            Color[,] groundColours = TextureTo2DArray(groundTexture);
-
-            Color[] foregroundColours = new Color[screenWidth * screenHeight];
+            Color[,] groundColors = TextureTo2DArray(groundTexture);
+            Color[] foregroundColors = new Color[screenWidth * screenHeight];
 
             for (int x = 0; x < screenWidth; x++)
             {
                 for (int y = 0; y < screenHeight; y++)
                 {
                     if (y > terrainContour[x])
-                        foregroundColours[x + y * screenWidth] = groundColours[x % groundTexture.Width,y % groundTexture.Height];
+                        foregroundColors[x + y * screenWidth] = groundColors[x % groundTexture.Width, y % groundTexture.Height];
                     else
-                        foregroundColours[x + y * screenWidth] = Color.Transparent;
+                        foregroundColors[x + y * screenWidth] = Color.Transparent;
                 }
             }
 
             foregroundTexture = new Texture2D(device, screenWidth, screenHeight, false, SurfaceFormat.Color);
-            foregroundTexture.SetData(foregroundColours);
+            foregroundTexture.SetData(foregroundColors);
 
             foregroundColourArray = TextureTo2DArray(foregroundTexture);
+        }
+
+        private Color[,] TextureTo2DArray(Texture2D texture)
+        {
+            Color[] colors1D = new Color[texture.Width * texture.Height];
+            texture.GetData(colors1D);
+
+            Color[,] colors2D = new Color[texture.Width, texture.Height];
+            for (int x = 0; x < texture.Width; x++)
+                for (int y = 0; y < texture.Height; y++)
+                    colors2D[x, y] = colors1D[x + y * texture.Width];
+
+            return colors2D;
         }
 
         protected override void UnloadContent()
@@ -220,11 +234,100 @@ namespace Rats_2D_game
             }
 
             if (particleList.Count > 0)
-            {
                 UpdateParticles(gameTime);
-            }
 
             base.Update(gameTime);
+        }
+
+        private void AddCrater(Color[,] tex, Matrix mat)
+        {
+            int width = tex.GetLength(0);
+            int height = tex.GetLength(1);
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (tex[x, y].R > 10)
+                    {
+                        Vector2 imagePos = new Vector2(x, y);
+                        Vector2 screenPos = Vector2.Transform(imagePos, mat);
+
+                        int screenX = (int)screenPos.X;
+                        int screenY = (int)screenPos.Y;
+
+                        if ((screenX) > 0 && (screenX < screenWidth))
+                            if (terrainContour[screenX] < screenY)
+                                terrainContour[screenX] = screenY;
+                    }
+                }
+            }
+        }
+
+        private void UpdateParticles(GameTime gameTime)
+        {
+            float now = (float)gameTime.TotalGameTime.TotalMilliseconds;
+            for (int i = particleList.Count - 1; i >= 0; i--)
+            {
+                ParticleData particle = particleList[i];
+                float timeAlive = now - particle.BirthTime;
+
+                if (timeAlive > particle.MaxAge)
+                {
+                    particleList.RemoveAt(i);
+                }
+                else
+                {
+                    float relAge = timeAlive / particle.MaxAge;
+                    particle.Position = 0.5f * particle.Accelaration * relAge * relAge + particle.Direction * relAge + particle.OrginalPosition;
+
+                    float invAge = 1.0f - relAge;
+                    particle.ModColour = new Color(new Vector4(invAge, invAge, invAge, invAge));
+
+                    Vector2 positionFromCenter = particle.Position - particle.OrginalPosition;
+                    float distance = positionFromCenter.Length();
+                    particle.Scaling = (50.0f + distance) / 200.0f;
+
+                    particleList[i] = particle;
+                }
+            }
+        }
+
+        private void AddExplosion(Vector2 explosionPos, int numberOfParticles, float size, float maxAge, GameTime gameTime)
+        {
+            for (int i = 0; i < numberOfParticles; i++)
+                AddExplosionParticle(explosionPos, size, maxAge, gameTime);
+            float rotation = (float)randomiser.Next(10);
+            Matrix mat = Matrix.CreateTranslation(-explosionTexture.Width / 2, -explosionTexture.Height / 2, 0) * Matrix.CreateRotationZ(rotation) * Matrix.CreateScale(size / (float)explosionTexture.Width * 2.0f) * Matrix.CreateTranslation(explosionPos.X, explosionPos.Y, 0);
+            AddCrater(explosionColourArray, mat);
+
+            for (int i = 0; i < players.Length; i++)
+                players[i].Position.Y = terrainContour[(int)players[i].Position.X];
+            FlattenTerrainBelowPlayers();
+            CreateForeground();
+        }
+
+        private void AddExplosionParticle(Vector2 explosionPos, float explosionSize, float maxAge, GameTime gameTime)
+        {
+            ParticleData particle = new ParticleData();
+
+            particle.OrginalPosition = explosionPos;
+            particle.Position = particle.OrginalPosition;
+
+            particle.BirthTime = (float)gameTime.TotalGameTime.TotalMilliseconds;
+            particle.MaxAge = maxAge;
+            particle.Scaling = 0.25f;
+            particle.ModColour = Color.White;
+
+            float particleDistance = (float)randomiser.NextDouble() * explosionSize;
+            Vector2 displacement = new Vector2(particleDistance, 0);
+            float angle = MathHelper.ToRadians(randomiser.Next(360));
+            displacement = Vector2.Transform(displacement, Matrix.CreateRotationZ(angle));
+
+            particle.Direction = displacement * 2.0f;
+            particle.Accelaration = -particle.Direction;
+
+            particleList.Add(particle);
         }
 
         private void UpdateRocket()
@@ -276,6 +379,7 @@ namespace Rats_2D_game
             if (keybState.IsKeyDown(Keys.Enter) || keybState.IsKeyDown(Keys.Space))
             {
                 rocketFlying = true;
+                launch.Play();
 
                 rocketPosition = players[currentPlayer].Position;
                 rocketPosition.X += 20;
@@ -286,81 +390,6 @@ namespace Rats_2D_game
                 rocketDirection = Vector2.Transform(up, rotMatrix);
                 rocketDirection *= players[currentPlayer].Power / 50.0f;
             }
-        }
-
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            spriteBatch.Begin();
-            DrawScenery();
-            DrawPlayers();
-            DrawText();
-            DrawRocket();
-            DrawSmoke();
-            spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
-            DrawExplosion();
-            spriteBatch.End();
-
-            base.Draw(gameTime);
-        }
-
-        private void DrawScenery()
-        {
-            Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
-            spriteBatch.Draw(backgroundTexture, screenRectangle, Color.White);
-            spriteBatch.Draw(foregroundTexture, screenRectangle, Color.White);
-        }
-
-        private void DrawPlayers()
-        {
-            foreach (PlayerData player in players)
-            {
-                if (player.IsAlive)
-                {
-                    int xPos = (int)player.Position.X;
-                    int yPos = (int)player.Position.Y;
-                    Vector2 cannonOrigin = new Vector2(11, 50);
-
-                    spriteBatch.Draw(cannonTexture, new Vector2(xPos + 20, yPos - 10), null, player.Color, player.Angle, cannonOrigin, playerScaling, SpriteEffects.None, 1);
-                    spriteBatch.Draw(carriageTexture, player.Position, null, player.Color, 0, new Vector2(0, carriageTexture.Height), playerScaling, SpriteEffects.None, 0);
-                }
-            }
-        }
-
-        private void DrawText()
-        {
-            PlayerData player = players[currentPlayer];
-            int currentAngle = (int)MathHelper.ToDegrees(player.Angle);
-            spriteBatch.DrawString(font, "Cannon angle: " + currentAngle.ToString(), new Vector2(20, 20), player.Color);
-            spriteBatch.DrawString(font, "Cannon power: " + player.Power.ToString(), new Vector2(20, 45), player.Color);
-        }
-
-        private void DrawRocket()
-        {
-            if (rocketFlying)
-                spriteBatch.Draw(rocketTexture, rocketPosition, null, players[currentPlayer].Color, rocketAngle, new Vector2(42, 240), 0.1f, SpriteEffects.None, 1);
-        }
-
-        private void DrawSmoke()
-        {
-            foreach (Vector2 smokePos in smokeList)
-                spriteBatch.Draw(smokeTexture, smokePos, null, Color.White, 0, new Vector2(40, 35), 0.2f, SpriteEffects.None, 1);
-        }
-
-        private Color[,] TextureTo2DArray(Texture2D texture)
-        {
-            Color[] colours1D = new Color[texture.Width * texture.Height];
-            texture.GetData(colours1D);
-
-            Color[,] colours2D = new Color[texture.Width, texture.Height];
-            for (int x = 0; x < texture.Width; x++)
-            for (int y = 0; y < texture.Height; y++)
-                colours2D[x, y] = colours1D[x + y * texture.Width];
-
-            return colours2D;
         }
 
         private Vector2 TexturesCollide(Color[,] tex1, Matrix mat1, Color[,] tex2, Matrix mat2)
@@ -423,6 +452,20 @@ namespace Rats_2D_game
 
                         Matrix carriageMat = Matrix.CreateTranslation(0, -carriageTexture.Height, 0) * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos, yPos, 0);
                         Vector2 carriageCollisionPoint = TexturesCollide(carriageColourArray, carriageMat, rocketColourArray, rocketMat);
+
+                        if (carriageCollisionPoint.X > -1)
+                        {
+                            players[i].IsAlive = false;
+                            return carriageCollisionPoint;
+                        }
+
+                        Matrix cannonMat = Matrix.CreateTranslation(-11, -50, 0) * Matrix.CreateRotationZ(player.Angle) * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
+                        Vector2 cannonCollisionPoint = TexturesCollide(cannonColourArray, cannonMat, rocketColourArray, rocketMat);
+                        if (cannonCollisionPoint.X > -1)
+                        {
+                            players[i].IsAlive = false;
+                            return cannonCollisionPoint;
+                        }
                     }
                 }
             }
@@ -448,8 +491,9 @@ namespace Rats_2D_game
             {
                 rocketFlying = false;
 
-                smokeList = new List<Vector2>();
-                AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
+                smokeList = new List<Vector2>(); AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
+
+                hitCannon.Play();
                 NextPlayer();
             }
 
@@ -457,8 +501,9 @@ namespace Rats_2D_game
             {
                 rocketFlying = false;
 
-                smokeList = new List<Vector2>();
-                AddExplosion(terrainCollisionPoint, 4, 30.0f, 100.0f, gameTime);
+                smokeList = new List<Vector2>(); AddExplosion(terrainCollisionPoint, 4, 30.0f, 1000.0f, gameTime);
+
+                hitTerrain.Play();
                 NextPlayer();
             }
 
@@ -479,36 +524,66 @@ namespace Rats_2D_game
                 currentPlayer = ++currentPlayer % numberOfPlayers;
         }
 
-        private void AddExplosion(Vector2 explosionPos, int numberOfParticles, float size, float maxAge,
-            GameTime gameTime)
+        protected override void Draw(GameTime gameTime)
         {
-            for (int i = 0; i < numberOfParticles; i++)
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            spriteBatch.Begin();
+            DrawScenery();
+            DrawPlayers();
+            DrawText();
+            DrawRocket();
+            DrawSmoke();
+            spriteBatch.End();
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+            DrawExplosion();
+            spriteBatch.End();
+
+            base.Draw(gameTime);
+        }
+
+        private void DrawScenery()
+        {
+            Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
+            spriteBatch.Draw(backgroundTexture, screenRectangle, Color.White);
+            spriteBatch.Draw(foregroundTexture, screenRectangle, Color.White);
+        }
+
+        private void DrawPlayers()
+        {
+            foreach (PlayerData player in players)
             {
-                AddExplosionParticle(explosionPos, size, maxAge, gameTime);
+                if (player.IsAlive)
+                {
+                    int xPos = (int)player.Position.X;
+                    int yPos = (int)player.Position.Y;
+                    Vector2 cannonOrigin = new Vector2(11, 50);
+
+                    spriteBatch.Draw(cannonTexture, new Vector2(xPos + 20, yPos - 10), null, player.Colour, player.Angle, cannonOrigin, playerScaling, SpriteEffects.None, 1);
+                    spriteBatch.Draw(carriageTexture, player.Position, null, player.Colour, 0, new Vector2(0, carriageTexture.Height), playerScaling, SpriteEffects.None, 0);
+                }
             }
         }
 
-        private void AddExplosionParticle(Vector2 explosionPos, float explosionSize, float maxAge, GameTime gameTime)
+        private void DrawText()
         {
-            ParticleData particle = new ParticleData();
+            PlayerData player = players[currentPlayer];
+            int currentAngle = (int)MathHelper.ToDegrees(player.Angle);
+            spriteBatch.DrawString(font, "Cannon angle: " + currentAngle.ToString(), new Vector2(20, 20), player.Colour);
+            spriteBatch.DrawString(font, "Cannon power: " + player.Power.ToString(), new Vector2(20, 45), player.Colour);
+        }
 
-            particle.OriginalPosition = explosionPos;
-            particle.Position = particle.OriginalPosition;
+        private void DrawRocket()
+        {
+            if (rocketFlying)
+                spriteBatch.Draw(rocketTexture, rocketPosition, null, players[currentPlayer].Colour, rocketAngle, new Vector2(42, 240), 0.1f, SpriteEffects.None, 1);
+        }
 
-            particle.BirthTime = (float)gameTime.TotalGameTime.TotalMilliseconds;
-            particle.MaxAge = maxAge;
-            particle.Scaling = 0.25f;
-            particle.ModColour = Color.White;
-
-            float particleDistance = (float)randomiser.NextDouble() * explosionSize;
-            Vector2 displacement = new Vector2(particleDistance, 0);
-            float angle = MathHelper.ToRadians(randomiser.Next(360));
-            displacement = Vector2.Transform(displacement, Matrix.CreateRotationZ(angle));
-
-            particle.Direction = displacement;
-            particle.Acceleration = 3.0f * particle.Direction;
-
-            particleList.Add(particle);
+        private void DrawSmoke()
+        {
+            foreach (Vector2 smokePos in smokeList)
+                spriteBatch.Draw(smokeTexture, smokePos, null, Color.White, 0, new Vector2(40, 35), 0.2f, SpriteEffects.None, 1);
         }
 
         private void DrawExplosion()
@@ -516,39 +591,8 @@ namespace Rats_2D_game
             for (int i = 0; i < particleList.Count; i++)
             {
                 ParticleData particle = particleList[i];
-                spriteBatch.Draw(explosionTexture, particle.Position, null, particle.ModColour, i, 
-                    new Vector2(256, 256), particle.Scaling, SpriteEffects.None, 1);
+                spriteBatch.Draw(explosionTexture, particle.Position, null, particle.ModColour, i, new Vector2(256, 256), particle.Scaling, SpriteEffects.None, 1);
             }
         }
-
-        private void UpdateParticles(GameTime gameTime)
-        {
-            float now = (float)gameTime.TotalGameTime.TotalMilliseconds;
-            for (int i = particleList.Count - 1; i >= 0; i--)
-            {
-                ParticleData particle = particleList[i];
-                float timeAlive = now - particle.BirthTime;
-
-                if (timeAlive > particle.MaxAge)
-                {
-                    particleList.RemoveAt(i);
-                }
-                else
-                {
-                    float relAge = timeAlive / particle.MaxAge;
-                    particle.Position = 0.5f * particle.Acceleration * relAge * relAge + particle.Direction * relAge + particle.OriginalPosition;
-
-                    float invAge = 1.0f - relAge;
-                    particle.ModColour = new Color(new Vector4(invAge, invAge, invAge, invAge));
-
-                    Vector2 positionFromCenter = particle.Position - particle.OriginalPosition;
-                    float distance = positionFromCenter.Length();
-                    particle.Scaling = (50.0f + distance) / 200.0f;
-
-                    particleList[i] = particle;
-                }
-            }
-        }
-
     }
 }
