@@ -7,73 +7,67 @@ namespace Rats_2D_game
     class Terrain
     {
         Variables v = new Variables();
-        Graphics g = new Graphics();
+        Methods m = new Methods();
 
-        public int[] terrainContour;
-
-        public Texture2D backgroundTexture;
-        public Texture2D groundTexture;
-        public Texture2D foregroundTexture;
-
-
+        private Random Randomiser = new Random();
 
         public void CreateForeground()
         {
-            Color[,] groundColors = g.TextureTo2DArray(groundTexture);
-            Color[] foregroundColors = new Color[v.screenWidth * v.screenHeight];
+            Color[,] groundColors = m.TextureTo2DArray(v.GroundTexture);
+            Color[] foregroundColors = new Color[v.ScreenWidth * v.ScreenHeight];
 
-            for (int x = 0; x < v.screenWidth; x++)
+            for (int x = 0; x < v.ScreenWidth; x++)
             {
-                for (int y = 0; y < v.screenHeight; y++)
+                for (int y = 0; y < v.ScreenHeight; y++)
                 {
-                    if (y > terrainContour[x])
-                        foregroundColors[x + y * v.screenWidth] = groundColors[x % groundTexture.Width, y % groundTexture.Height];
+                    if (y > v.TerrainContour[x])
+                        foregroundColors[x + y * v.ScreenWidth] = groundColors[x % v.GroundTexture.Width, y % v.GroundTexture.Height];
                     else
-                        foregroundColors[x + y * v.screenWidth] = Color.Transparent;
+                        foregroundColors[x + y * v.ScreenWidth] = Color.Transparent;
                 }
             }
 
-            foregroundTexture = new Texture2D(v.device, v.screenWidth, v.screenHeight, false, SurfaceFormat.Color);
-            foregroundTexture.SetData(foregroundColors);
+            v.ForegroundTexture = new Texture2D(v.Device, v.ScreenWidth, v.ScreenHeight, false, SurfaceFormat.Color);
+            v.ForegroundTexture.SetData(foregroundColors);
 
-            v.foregroundColourArray = g.TextureTo2DArray(foregroundTexture);
+            v.ForegroundColourArray = m.TextureTo2DArray(v.ForegroundTexture);
         }
 
         public void DrawScenery()
         {
-            Rectangle screenRectangle = new Rectangle(0, 0, v.screenWidth, v.screenHeight);
-            v.spriteBatch.Draw(backgroundTexture, screenRectangle, Color.White);
-            v.spriteBatch.Draw(foregroundTexture, screenRectangle, Color.White);
+            Rectangle screenRectangle = new Rectangle(0, 0, v.ScreenWidth, v.ScreenHeight);
+            v.SpriteBatch.Draw(v.BackgroundTexture, screenRectangle, Color.White);
+            v.SpriteBatch.Draw(v.ForegroundTexture, screenRectangle, Color.White);
         }
 
         public void GenerateTerrainContour()
         {
-            terrainContour = new int[v.screenWidth];
+            v.TerrainContour = new int[v.ScreenWidth];
 
-            double rand1 = v.Randomiser.NextDouble() + 1;
-            double rand2 = v.Randomiser.NextDouble() + 2;
-            double rand3 = v.Randomiser.NextDouble() + 3;
+            double rand1 = Randomiser.NextDouble() + 1;
+            double rand2 = Randomiser.NextDouble() + 2;
+            double rand3 = Randomiser.NextDouble() + 3;
 
-            float offset = v.screenHeight / 2;
+            float offset = v.ScreenHeight / 2;
             float peakheight = 100;
             float flatness = 70;
 
-            for (int x = 0; x < v.screenWidth; x++)
+            for (int x = 0; x < v.ScreenWidth; x++)
             {
                 double height = peakheight / rand1 * Math.Sin((float)x / flatness * rand1 + rand1);
                 height += peakheight / rand2 * Math.Sin((float)x / flatness * rand2 + rand2);
                 height += peakheight / rand3 * Math.Sin((float)x / flatness * rand3 + rand3);
                 height += offset;
-                terrainContour[x] = (int)height;
+                v.TerrainContour[x] = (int)height;
             }
         }
 
         public void FlattenTerrainBelowPlayers()
         {
-            foreach (PlayerData player in v.players)
+            foreach (PlayerData player in v.Players)
                 if (player.IsAlive)
                     for (int x = 0; x < 40; x++)
-                        terrainContour[(int)player.Position.X + x] = terrainContour[(int)player.Position.X];
+                        v.TerrainContour[(int)player.Position.X + x] = v.TerrainContour[(int)player.Position.X];
         }
 
         public void AddCrater(Color[,] tex, Matrix mat)
@@ -93,9 +87,9 @@ namespace Rats_2D_game
                         int screenX = (int)screenPos.X;
                         int screenY = (int)screenPos.Y;
 
-                        if ((screenX) > 0 && (screenX < v.screenWidth))
-                            if (terrainContour[screenX] < screenY)
-                                terrainContour[screenX] = screenY;
+                        if ((screenX) > 0 && (screenX < v.ScreenWidth))
+                            if (v.TerrainContour[screenX] < screenY)
+                                v.TerrainContour[screenX] = screenY;
                     }
                 }
             }
