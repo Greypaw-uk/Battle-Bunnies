@@ -5,9 +5,9 @@ namespace Rats_2D_game
 {
     class CollisionDetection
     {
+        Logic l = new Logic();
         Variables v = new Variables();
         Graphics g = new Graphics();
-        Methods m = new Methods();
 
         public void CheckCollisions(GameTime gameTime)
         {
@@ -17,82 +17,82 @@ namespace Rats_2D_game
 
             if (playerCollisionPoint.X > -1)
             {
-                v.RocketFlying = false;
+                v.rocketFlying = false;
 
-                v.SmokeList = new List<Vector2>(); g.AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
+                g.smokeList = new List<Vector2>(); g.AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
 
-                v.HitCannon.Play();
-                m.NextPlayer();
+                v.hitCannon.Play();
+                l.NextPlayer();
             }
 
             if (terrainCollisionPoint.X > -1)
             {
-                v.RocketFlying = false;
+                v.rocketFlying = false;
 
-                v.SmokeList = new List<Vector2>(); g.AddExplosion(terrainCollisionPoint, 4, 30.0f, 1000.0f, gameTime);
+                g.smokeList = new List<Vector2>(); g.AddExplosion(terrainCollisionPoint, 4, 30.0f, 1000.0f, gameTime);
 
-                v.HitTerrain.Play();
-                m.NextPlayer();
+                v.hitTerrain.Play();
+                l.NextPlayer();
             }
 
             if (rocketOutOfScreen)
             {
-                v.RocketFlying = false;
+                v.rocketFlying = false;
 
-                v.SmokeList = new List<Vector2>();
-                m.NextPlayer();
+                g.smokeList = new List<Vector2>();
+                l.NextPlayer();
             }
         }
 
         private bool CheckOutOfScreen()
         {
-            bool rocketOutOfScreen = v.RocketPosition.Y > v.ScreenHeight;
-            rocketOutOfScreen |= v.RocketPosition.X < 0;
-            rocketOutOfScreen |= v.RocketPosition.X > v.ScreenWidth;
+            bool rocketOutOfScreen = v.rocketPosition.Y > v.screenHeight;
+            rocketOutOfScreen |= v.rocketPosition.X < 0;
+            rocketOutOfScreen |= v.rocketPosition.X > v.screenWidth;
 
             return rocketOutOfScreen;
         }
 
         private Vector2 CheckTerrainCollision()
         {
-            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(v.RocketAngle) 
-                * Matrix.CreateScale(v.RocketScaling) * Matrix.CreateTranslation(v.RocketPosition.X, v.RocketPosition.Y, 0);
+            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(v.rocketAngle) 
+                * Matrix.CreateScale(v.rocketScaling) * Matrix.CreateTranslation(v.rocketPosition.X, v.rocketPosition.Y, 0);
             Matrix terrainMat = Matrix.Identity;
-            Vector2 terrainCollisionPoint = TexturesCollide(v.RocketColourArray, rocketMat, v.ForegroundColourArray, terrainMat);
+            Vector2 terrainCollisionPoint = TexturesCollide(v.rocketColourArray, rocketMat, v.foregroundColourArray, terrainMat);
             return terrainCollisionPoint;
         }
 
         private Vector2 CheckPlayersCollision()
         {
-            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(v.RocketAngle) 
-                * Matrix.CreateScale(v.RocketScaling) * Matrix.CreateTranslation(v.RocketPosition.X, v.RocketPosition.Y, 0);
+            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(v.rocketAngle) 
+                * Matrix.CreateScale(v.rocketScaling) * Matrix.CreateTranslation(v.rocketPosition.X, v.rocketPosition.Y, 0);
             for (int i = 0; i < v.NumberOfPlayers; i++)
             {
-                PlayerData player = v.Players[i];
+                PlayerData player = v.players[i];
                 if (player.IsAlive)
                 {
-                    if (i != v.CurrentPlayer)
+                    if (i != v.currentPlayer)
                     {
                         int xPos = (int)player.Position.X;
                         int yPos = (int)player.Position.Y;
 
-                        Matrix carriageMat = Matrix.CreateTranslation(0, -v.CarriageTexture.Height, 0)
-                            * Matrix.CreateScale(v.PlayerScaling) * Matrix.CreateTranslation(xPos, yPos, 0);
-                        Vector2 carriageCollisionPoint = TexturesCollide(v.CarriageColourArray, carriageMat, v.RocketColourArray,
+                        Matrix carriageMat = Matrix.CreateTranslation(0, -v.carriageTexture.Height, 0)
+                            * Matrix.CreateScale(v.playerScaling) * Matrix.CreateTranslation(xPos, yPos, 0);
+                        Vector2 carriageCollisionPoint = TexturesCollide(v.carriageColourArray, carriageMat, v.rocketColourArray,
                             rocketMat);
 
                         if (carriageCollisionPoint.X > -1)
                         {
-                            v.Players[i].IsAlive = false;
+                            v.players[i].IsAlive = false;
                             return carriageCollisionPoint;
                         }
 
                         Matrix cannonMat = Matrix.CreateTranslation(-11, -50, 0) * Matrix.CreateRotationZ(player.Angle)
-                            * Matrix.CreateScale(v.PlayerScaling) * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
-                        Vector2 cannonCollisionPoint = TexturesCollide(v.CannonColourArray, cannonMat, v.RocketColourArray, rocketMat);
+                            * Matrix.CreateScale(v.playerScaling) * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
+                        Vector2 cannonCollisionPoint = TexturesCollide(v.cannonColourArray, cannonMat, v.rocketColourArray, rocketMat);
                         if (cannonCollisionPoint.X > -1)
                         {
-                            v.Players[i].IsAlive = false;
+                            v.players[i].IsAlive = false;
                             return cannonCollisionPoint;
                         }
                     }
@@ -103,7 +103,7 @@ namespace Rats_2D_game
 
         private Vector2 TexturesCollide(Color[,] tex1, Matrix mat1, Color[,] tex2, Matrix mat2)
         {
-            Matrix mat1To2 = mat1 * Matrix.Invert(mat2);
+            Matrix mat1to2 = mat1 * Matrix.Invert(mat2);
             int width1 = tex1.GetLength(0);
             int height1 = tex1.GetLength(1);
             int width2 = tex2.GetLength(0);
@@ -114,7 +114,7 @@ namespace Rats_2D_game
                 for (int y1 = 0; y1 < height1; y1++)
                 {
                     Vector2 pos1 = new Vector2(x1, y1);
-                    Vector2 pos2 = Vector2.Transform(pos1, mat1To2);
+                    Vector2 pos2 = Vector2.Transform(pos1, mat1to2);
 
                     int x2 = (int)pos2.X;
                     int y2 = (int)pos2.Y;

@@ -45,7 +45,6 @@
     <Compile Include="KeyMap.cs" />
     <Compile Include="Graphics.cs" />
     <Compile Include="Logic.cs" />
-    <Compile Include="Methods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Terrain.cs" />
