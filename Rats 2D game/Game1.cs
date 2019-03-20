@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Audio;
 
 namespace Rats_2D_game
-{
+{ 
     public struct PlayerData
     {
         public Vector2 Position;
@@ -35,17 +35,28 @@ namespace Rats_2D_game
         GraphicsDevice device;
         Texture2D backgroundTexture;
         Texture2D foregroundTexture;
-        Texture2D carriageTexture;
-        Texture2D cannonTexture;
+        Texture2D launcherTexture;
+        Texture2D bunnyTexture;
         Texture2D rocketTexture;
         Texture2D smokeTexture;
         Texture2D groundTexture;
         Texture2D explosionTexture;
         SpriteFont font;
 
-        private SoundEffect hitCannon;
+        private Texture2D splashScreen;
+
+        private SoundEffect hitbunny;
         private SoundEffect hitTerrain;
         private SoundEffect launch;
+
+        enum GameState
+        {
+            SplashScreen,
+            TitleScreen,
+            Playing,
+            Paused
+        }
+        GameState gameState = GameState.SplashScreen;
 
         int screenWidth;
         int screenHeight;
@@ -65,8 +76,8 @@ namespace Rats_2D_game
         int[] terrainContour;
         Color[,] rocketColourArray;
         Color[,] foregroundColourArray;
-        Color[,] carriageColourArray;
-        Color[,] cannonColourArray;
+        Color[,] launcherColourArray;
+        Color[,] bunnyColourArray;
 
         List<ParticleData> particleList = new List<ParticleData>();
         Color[,] explosionColourArray;
@@ -83,7 +94,7 @@ namespace Rats_2D_game
             graphics.PreferredBackBufferHeight = 500;
             graphics.IsFullScreen = false;
             graphics.ApplyChanges();
-            Window.Title = "Rat's 2D Battle Game";
+            Window.Title = "Battle Bunnies";
 
             base.Initialize();
         }
@@ -123,16 +134,18 @@ namespace Rats_2D_game
             font = Content.Load<SpriteFont>("myFont");
 
             backgroundTexture = Content.Load<Texture2D>("background");
-            carriageTexture = Content.Load<Texture2D>("carriage");
-            cannonTexture = Content.Load<Texture2D>("cannon");
+            launcherTexture = Content.Load<Texture2D>("body");
+            bunnyTexture = Content.Load<Texture2D>("launcher");
             rocketTexture = Content.Load<Texture2D>("rocket");
             smokeTexture = Content.Load<Texture2D>("smoke");
             groundTexture = Content.Load<Texture2D>("foreground");
             explosionTexture = Content.Load<Texture2D>("explosion");
 
+            splashScreen = Content.Load<Texture2D>("splash");
+
             screenWidth = device.PresentationParameters.BackBufferWidth;
             screenHeight = device.PresentationParameters.BackBufferHeight;
-            playerScaling = 40.0f / (float)carriageTexture.Width;
+            playerScaling = 40.0f / (float)launcherTexture.Width;
 
             GenerateTerrainContour();
             SetUpPlayers();
@@ -140,12 +153,12 @@ namespace Rats_2D_game
             CreateForeground();
 
             rocketColourArray = TextureTo2DArray(rocketTexture);
-            carriageColourArray = TextureTo2DArray(carriageTexture);
-            cannonColourArray = TextureTo2DArray(cannonTexture);
+            launcherColourArray = TextureTo2DArray(launcherTexture);
+            bunnyColourArray = TextureTo2DArray(bunnyTexture);
 
             explosionColourArray = TextureTo2DArray(explosionTexture);
 
-            hitCannon = Content.Load<SoundEffect>("hitcannon");
+            hitbunny = Content.Load<SoundEffect>("hitbunny");
             hitTerrain = Content.Load<SoundEffect>("hitterrain");
             launch = Content.Load<SoundEffect>("launch");
         }
@@ -167,7 +180,7 @@ namespace Rats_2D_game
             double rand3 = randomiser.NextDouble() + 3;
 
             float offset = screenHeight / 2;
-            float peakheight = 100;
+            float peakheight = 80;
             float flatness = 70;
 
             for (int x = 0; x < screenWidth; x++)
@@ -235,7 +248,7 @@ namespace Rats_2D_game
 
             if (particleList.Count > 0)
                 UpdateParticles(gameTime);
-
+             
             base.Update(gameTime);
         }
 
@@ -352,43 +365,54 @@ namespace Rats_2D_game
         private void ProcessKeyboard()
         {
             KeyboardState keybState = Keyboard.GetState();
-            if (keybState.IsKeyDown(Keys.Left))
-                players[currentPlayer].Angle -= 0.01f;
-            if (keybState.IsKeyDown(Keys.Right))
-                players[currentPlayer].Angle += 0.01f;
 
-            if (players[currentPlayer].Angle > MathHelper.PiOver2)
-                players[currentPlayer].Angle = -MathHelper.PiOver2;
-            if (players[currentPlayer].Angle < -MathHelper.PiOver2)
-                players[currentPlayer].Angle = MathHelper.PiOver2;
-
-            if (keybState.IsKeyDown(Keys.Down))
-                players[currentPlayer].Power -= 1;
-            if (keybState.IsKeyDown(Keys.Up))
-                players[currentPlayer].Power += 1;
-            if (keybState.IsKeyDown(Keys.PageDown))
-                players[currentPlayer].Power -= 20;
-            if (keybState.IsKeyDown(Keys.PageUp))
-                players[currentPlayer].Power += 20;
-
-            if (players[currentPlayer].Power > 1000)
-                players[currentPlayer].Power = 1000;
-            if (players[currentPlayer].Power < 0)
-                players[currentPlayer].Power = 0;
-
-            if (keybState.IsKeyDown(Keys.Enter) || keybState.IsKeyDown(Keys.Space))
+            if (gameState == GameState.SplashScreen)
             {
-                rocketFlying = true;
-                launch.Play();
+                if (keybState.IsKeyDown(Keys.Enter))
+                {
+                    gameState = GameState.Playing;
+                }
+            }
+            else if (gameState == GameState.Playing)
+            {
+                if (keybState.IsKeyDown(Keys.Left))
+                    players[currentPlayer].Angle -= 0.01f;
+                if (keybState.IsKeyDown(Keys.Right))
+                    players[currentPlayer].Angle += 0.01f;
 
-                rocketPosition = players[currentPlayer].Position;
-                rocketPosition.X += 20;
-                rocketPosition.Y -= 10;
-                rocketAngle = players[currentPlayer].Angle;
-                Vector2 up = new Vector2(0, -1);
-                Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
-                rocketDirection = Vector2.Transform(up, rotMatrix);
-                rocketDirection *= players[currentPlayer].Power / 50.0f;
+                if (players[currentPlayer].Angle > MathHelper.PiOver2)
+                    players[currentPlayer].Angle = -MathHelper.PiOver2;
+                if (players[currentPlayer].Angle < -MathHelper.PiOver2)
+                    players[currentPlayer].Angle = MathHelper.PiOver2;
+
+                if (keybState.IsKeyDown(Keys.Down))
+                    players[currentPlayer].Power -= 1;
+                if (keybState.IsKeyDown(Keys.Up))
+                    players[currentPlayer].Power += 1;
+                if (keybState.IsKeyDown(Keys.PageDown))
+                    players[currentPlayer].Power -= 20;
+                if (keybState.IsKeyDown(Keys.PageUp))
+                    players[currentPlayer].Power += 20;
+
+                if (players[currentPlayer].Power > 1000)
+                    players[currentPlayer].Power = 1000;
+                if (players[currentPlayer].Power < 0)
+                    players[currentPlayer].Power = 0;
+
+                if (keybState.IsKeyDown(Keys.Space))
+                {
+                    rocketFlying = true;
+                    launch.Play();
+
+                    rocketPosition = players[currentPlayer].Position;
+                    rocketPosition.X += 20;
+                    rocketPosition.Y -= 10;
+                    rocketAngle = players[currentPlayer].Angle;
+                    Vector2 up = new Vector2(0, -1);
+                    Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
+                    rocketDirection = Vector2.Transform(up, rotMatrix);
+                    rocketDirection *= players[currentPlayer].Power / 50.0f;
+                }
             }
         }
 
@@ -450,21 +474,21 @@ namespace Rats_2D_game
                         int xPos = (int)player.Position.X;
                         int yPos = (int)player.Position.Y;
 
-                        Matrix carriageMat = Matrix.CreateTranslation(0, -carriageTexture.Height, 0) * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos, yPos, 0);
-                        Vector2 carriageCollisionPoint = TexturesCollide(carriageColourArray, carriageMat, rocketColourArray, rocketMat);
+                        Matrix launcherMat = Matrix.CreateTranslation(0, -launcherTexture.Height, 0) * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos, yPos, 0);
+                        Vector2 launcherCollisionPoint = TexturesCollide(launcherColourArray, launcherMat, rocketColourArray, rocketMat);
 
-                        if (carriageCollisionPoint.X > -1)
+                        if (launcherCollisionPoint.X > -1)
                         {
                             players[i].IsAlive = false;
-                            return carriageCollisionPoint;
+                            return launcherCollisionPoint;
                         }
 
-                        Matrix cannonMat = Matrix.CreateTranslation(-11, -50, 0) * Matrix.CreateRotationZ(player.Angle) * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
-                        Vector2 cannonCollisionPoint = TexturesCollide(cannonColourArray, cannonMat, rocketColourArray, rocketMat);
-                        if (cannonCollisionPoint.X > -1)
+                        Matrix bunnyMat = Matrix.CreateTranslation(-11, -50, 0) * Matrix.CreateRotationZ(player.Angle) * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
+                        Vector2 bunnyCollisionPoint = TexturesCollide(bunnyColourArray, bunnyMat, rocketColourArray, rocketMat);
+                        if (bunnyCollisionPoint.X > -1)
                         {
                             players[i].IsAlive = false;
-                            return cannonCollisionPoint;
+                            return bunnyCollisionPoint;
                         }
                     }
                 }
@@ -493,7 +517,7 @@ namespace Rats_2D_game
 
                 smokeList = new List<Vector2>(); AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
 
-                hitCannon.Play();
+                hitbunny.Play();
                 NextPlayer();
             }
 
@@ -528,17 +552,26 @@ namespace Rats_2D_game
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin();
-            DrawScenery();
-            DrawPlayers();
-            DrawText();
-            DrawRocket();
-            DrawSmoke();
-            spriteBatch.End();
+            if (gameState == GameState.SplashScreen)
+            {
+                spriteBatch.Begin();
+                DrawSplashScreen();
+                spriteBatch.End();
+            }   
+            else if(gameState == GameState.Playing)
+            {
+                spriteBatch.Begin();
+                DrawScenery();
+                DrawPlayers();
+                DrawText();
+                DrawRocket();
+                DrawSmoke();
+                spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
-            DrawExplosion();
-            spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+                DrawExplosion();
+                spriteBatch.End();
+            }
 
             base.Draw(gameTime);
         }
@@ -550,6 +583,12 @@ namespace Rats_2D_game
             spriteBatch.Draw(foregroundTexture, screenRectangle, Color.White);
         }
 
+        private void DrawSplashScreen()
+        {
+            Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
+            spriteBatch.Draw(splashScreen, screenRectangle, Color.White);
+        }
+
         private void DrawPlayers()
         {
             foreach (PlayerData player in players)
@@ -558,10 +597,10 @@ namespace Rats_2D_game
                 {
                     int xPos = (int)player.Position.X;
                     int yPos = (int)player.Position.Y;
-                    Vector2 cannonOrigin = new Vector2(11, 50);
+                    Vector2 bunnyOrigin = new Vector2(22, 22);
 
-                    spriteBatch.Draw(cannonTexture, new Vector2(xPos + 20, yPos - 10), null, player.Colour, player.Angle, cannonOrigin, playerScaling, SpriteEffects.None, 1);
-                    spriteBatch.Draw(carriageTexture, player.Position, null, player.Colour, 0, new Vector2(0, carriageTexture.Height), playerScaling, SpriteEffects.None, 0);
+                    spriteBatch.Draw(bunnyTexture, new Vector2(xPos +20, yPos -20), null, player.Colour, player.Angle, bunnyOrigin, playerScaling, SpriteEffects.None, 1);
+                    spriteBatch.Draw(launcherTexture, player.Position, null, player.Colour, 0, new Vector2(0, launcherTexture.Height), playerScaling, SpriteEffects.None, 0);
                 }
             }
         }
@@ -570,8 +609,8 @@ namespace Rats_2D_game
         {
             PlayerData player = players[currentPlayer];
             int currentAngle = (int)MathHelper.ToDegrees(player.Angle);
-            spriteBatch.DrawString(font, "Cannon angle: " + currentAngle.ToString(), new Vector2(20, 20), player.Colour);
-            spriteBatch.DrawString(font, "Cannon power: " + player.Power.ToString(), new Vector2(20, 45), player.Colour);
+            spriteBatch.DrawString(font, "bunny angle: " + currentAngle.ToString(), new Vector2(20, 20), player.Colour);
+            spriteBatch.DrawString(font, "bunny power: " + player.Power.ToString(), new Vector2(20, 45), player.Colour);
         }
 
         private void DrawRocket()

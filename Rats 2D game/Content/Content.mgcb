@@ -37,30 +37,6 @@
 /processorParam:TextureFormat=Color
 /build:foreground.png
 
-#begin cannon.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:cannon.png
-
-#begin carriage.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:carriage.png
-
 #begin rocket.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -104,12 +80,6 @@
 /processorParam:TextureFormat=Compressed
 /build:myFont.spritefont
 
-#begin hitCannon.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:hitCannon.wav
-
 #begin hitTerrain.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
@@ -121,4 +91,46 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:launch.wav
+
+#begin body.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:body.png
+
+#begin launcher.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:launcher.png
+
+#begin hitbunny.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:hitbunny.wav
+
+#begin splash.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:splash.png
 
