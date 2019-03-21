@@ -3,7 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 
 namespace Rats_2D_game
 { 
@@ -60,6 +62,8 @@ namespace Rats_2D_game
         private SoundEffect hitTerrain;
         private SoundEffect launch;
 
+        private Song titleTheme;
+
 //  Player Variables 
         PlayerData[] players;
         int numberOfPlayers = 4;
@@ -79,10 +83,6 @@ namespace Rats_2D_game
         Color[,] launcherColourArray;
         Color[,] bunnyColourArray;
         Color[,] explosionColourArray;
-
-//  Controls
-        MouseState mouseState = Mouse.GetState();
-        KeyboardState keybState = Keyboard.GetState();
 
 //  Misc
         List<Vector2> smokeList = new List<Vector2>(); Random randomiser = new Random();
@@ -111,11 +111,15 @@ namespace Rats_2D_game
             switch (gameState)
             {
                 case GameState.SplashScreen:
+                {
                     IsMouseVisible = true;
-                break;
+                    break;
+                }
                 case GameState.TitleScreen:
+                {
                     IsMouseVisible = true;
-                break;
+                    break;
+                }
             }
 
             graphics.PreferredBackBufferWidth = 800;
@@ -137,44 +141,35 @@ namespace Rats_2D_game
 
             font = Content.Load<SpriteFont>("myFont");
 
-            switch (gameState)
-            {
-                case GameState.SplashScreen:
-                    splashScreen = Content.Load<Texture2D>("splash");
-                    break;
+            splashScreen = Content.Load<Texture2D>("splash");
 
-                case GameState.TitleScreen:
-                    titleScreen = Content.Load<Texture2D>("title");
-                    startButton = Content.Load<Texture2D>("start");
-                    break;
+            titleScreen = Content.Load<Texture2D>("title");
+            startButton = Content.Load<Texture2D>("start");
 
-                case GameState.Playing:
-                    backgroundTexture = Content.Load<Texture2D>("background");
-                    launcherTexture = Content.Load<Texture2D>("body");
-                    bunnyTexture = Content.Load<Texture2D>("launcher");
-                    rocketTexture = Content.Load<Texture2D>("rocket");
-                    smokeTexture = Content.Load<Texture2D>("smoke");
-                    groundTexture = Content.Load<Texture2D>("foreground");
-                    explosionTexture = Content.Load<Texture2D>("explosion");
+            backgroundTexture = Content.Load<Texture2D>("background");
+            launcherTexture = Content.Load<Texture2D>("body");
+            bunnyTexture = Content.Load<Texture2D>("launcher");
+            rocketTexture = Content.Load<Texture2D>("rocket");
+            smokeTexture = Content.Load<Texture2D>("smoke");
+            groundTexture = Content.Load<Texture2D>("foreground");
+            explosionTexture = Content.Load<Texture2D>("explosion");
 
-                    GenerateTerrainContour();
-                    SetUpPlayers();
-                    FlattenTerrainBelowPlayers();
-                    CreateForeground();
+            GenerateTerrainContour();
+            SetUpPlayers();
+            FlattenTerrainBelowPlayers();
+            CreateForeground();
 
-                    playerScaling = 40.0f / (float)launcherTexture.Width;
+            playerScaling = 40.0f / (float) launcherTexture.Width;
 
-                    rocketColourArray = TextureTo2DArray(rocketTexture);
-                    launcherColourArray = TextureTo2DArray(launcherTexture);
-                    bunnyColourArray = TextureTo2DArray(bunnyTexture);
+            rocketColourArray = TextureTo2DArray(rocketTexture);
+            launcherColourArray = TextureTo2DArray(launcherTexture);
+            bunnyColourArray = TextureTo2DArray(bunnyTexture);
 
-                    explosionColourArray = TextureTo2DArray(explosionTexture);
+            explosionColourArray = TextureTo2DArray(explosionTexture);
 
-                    hitbunny = Content.Load<SoundEffect>("hitbunny");
-                    hitTerrain = Content.Load<SoundEffect>("hitterrain");
-                    launch = Content.Load<SoundEffect>("launch");
-                    break;
-            }
+            hitbunny = Content.Load<SoundEffect>("hitbunny");
+            hitTerrain = Content.Load<SoundEffect>("hitterrain");
+            launch = Content.Load<SoundEffect>("launch");
         }
 
         protected override void UnloadContent()
@@ -184,28 +179,31 @@ namespace Rats_2D_game
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+            {
                 Exit();
+            }
 
             ProcessMouse();
             ProcessKeyboard();
 
-            switch (gameState)
+            if (rocketFlying)
             {
-                case GameState.SplashScreen:
-                    break;
-                case GameState.TitleScreen:
-                    break;
-                case GameState.Playing:
-                    if (rocketFlying)
-                    {
-                        UpdateRocket();
-                        CheckCollisions(gameTime);
-                    }
+                UpdateRocket();
+                CheckCollisions(gameTime);
+            }
 
-                    if (particleList.Count > 0)
-                        UpdateParticles(gameTime);
-                    break;
+            if (particleList.Count > 0)
+            {
+                UpdateParticles(gameTime);
+            }
 
+            if(gameState.Equals(GameState.SplashScreen) || (gameState.Equals(GameState.TitleScreen)))
+            {
+                MediaPlayer.Play(titleTheme);
+            }
+            else
+            {
+                MediaPlayer.Stop();
             }
 
             base.Update(gameTime);
@@ -218,18 +216,23 @@ namespace Rats_2D_game
             switch (gameState)
             {
                 case GameState.SplashScreen:
+                {
                     spriteBatch.Begin();
                     DrawSplashScreen();
                     spriteBatch.End();
-                break;
+                    break;
+                }
 
                 case GameState.TitleScreen:
+                {
                     spriteBatch.Begin();
                     DrawTitleScreen();
                     spriteBatch.End();
-                break;
+                    break;
+                }
 
                 case GameState.Playing:
+                {
                     spriteBatch.Begin();
                     DrawScenery();
                     DrawPlayers();
@@ -241,7 +244,8 @@ namespace Rats_2D_game
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
                     DrawExplosion();
                     spriteBatch.End();
-                break;
+                    break;
+                }
             }
 
             base.Draw(gameTime);
@@ -300,9 +304,13 @@ namespace Rats_2D_game
                 for (int y = 0; y < screenHeight; y++)
                 {
                     if (y > terrainContour[x])
+                    {
                         foregroundColors[x + y * screenWidth] = groundColors[x % groundTexture.Width, y % groundTexture.Height];
+                    }
                     else
+                    {
                         foregroundColors[x + y * screenWidth] = Color.Transparent;
+                    }
                 }
             }
 
@@ -338,9 +346,15 @@ namespace Rats_2D_game
         private void FlattenTerrainBelowPlayers()
         {
             foreach (PlayerData player in players)
+            {
                 if (player.IsAlive)
+                {
                     for (int x = 0; x < 40; x++)
+                    {
                         terrainContour[(int)player.Position.X + x] = terrainContour[(int)player.Position.X];
+                    }
+                }
+            }
         }
 
         private void AddCrater(Color[,] tex, Matrix mat)
@@ -361,8 +375,12 @@ namespace Rats_2D_game
                         int screenY = (int)screenPos.Y;
 
                         if ((screenX) > 0 && (screenX < screenWidth))
+                        {
                             if (terrainContour[screenX] < screenY)
+                            {
                                 terrainContour[screenX] = screenY;
+                            }
+                        }
                     }
                 }
             }
@@ -380,6 +398,8 @@ namespace Rats_2D_game
         {
             Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
             spriteBatch.Draw(splashScreen, screenRectangle, Color.White);
+
+            
         }
 
         private void DrawTitleScreen()
@@ -393,10 +413,15 @@ namespace Rats_2D_game
             spriteBatch.Draw(titleScreen, screenRectangle, Color.White);
             spriteBatch.Draw(startButton, startRectangle, Color.White);
 
-            if (Mouse.GetState().X == startRectangle.X && Mouse.GetState().Y == startRectangle.Y)
+            // Clicking Start button
+            if (Mouse.GetState().X > startRectangle.X
+                && Mouse.GetState().X < startRectangle.X + startRectangle.Width
+                && Mouse.GetState().Y > startRectangle.Y
+                && Mouse.GetState().Y < startRectangle.Y + startRectangle.Height)
             {
-                if (mouseState.LeftButton == ButtonState.Pressed)
+                if (Mouse.GetState().LeftButton.Equals(ButtonState.Pressed))
                 {
+                    
                     gameState = GameState.Playing;
                 }  
             }
@@ -438,14 +463,18 @@ namespace Rats_2D_game
         private void DrawRocket()
         {
             if (rocketFlying)
+            {
                 spriteBatch.Draw(rocketTexture, rocketPosition, null, players[currentPlayer].Colour, rocketAngle, 
                     new Vector2(42, 240), 0.1f, SpriteEffects.None, 1);
+            }
         }
 
         private void DrawSmoke()
         {
             foreach (Vector2 smokePos in smokeList)
+            {
                 spriteBatch.Draw(smokeTexture, smokePos, null, Color.White, 0, new Vector2(40, 35), 0.2f, SpriteEffects.None, 1);
+            }
         }
 
         private void DrawExplosion()
@@ -465,8 +494,12 @@ namespace Rats_2D_game
 
             Color[,] colors2D = new Color[texture.Width, texture.Height];
             for (int x = 0; x < texture.Width; x++)
-            for (int y = 0; y < texture.Height; y++)
-                colors2D[x, y] = colors1D[x + y * texture.Width];
+            {
+                for (int y = 0; y < texture.Height; y++)
+                {
+                    colors2D[x, y] = colors1D[x + y * texture.Width];
+                }
+            }
 
             return colors2D;
         }
@@ -503,14 +536,20 @@ namespace Rats_2D_game
         private void AddExplosion(Vector2 explosionPos, int numberOfParticles, float size, float maxAge, GameTime gameTime)
         {
             for (int i = 0; i < numberOfParticles; i++)
+            {
                 AddExplosionParticle(explosionPos, size, maxAge, gameTime);
+            }
+
             float rotation = (float)randomiser.Next(10);
             Matrix mat = Matrix.CreateTranslation(-explosionTexture.Width / 2, -explosionTexture.Height / 2, 0) * Matrix.CreateRotationZ(rotation) 
                 * Matrix.CreateScale(size / (float)explosionTexture.Width * 2.0f) * Matrix.CreateTranslation(explosionPos.X, explosionPos.Y, 0);
             AddCrater(explosionColourArray, mat);
 
             for (int i = 0; i < players.Length; i++)
+            {
                 players[i].Position.Y = terrainContour[(int)players[i].Position.X];
+            }
+
             FlattenTerrainBelowPlayers();
             CreateForeground();
         }
@@ -579,7 +618,9 @@ namespace Rats_2D_game
             currentPlayer = currentPlayer + 1;
             currentPlayer = currentPlayer % numberOfPlayers;
             while (!players[currentPlayer].IsAlive)
+            {
                 currentPlayer = ++currentPlayer % numberOfPlayers;
+            }
         }
 
 
@@ -719,78 +760,80 @@ namespace Rats_2D_game
 
         private void ProcessMouse()
         {
-            switch (gameState)
+
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
-                case GameState.SplashScreen:
-                    if (mouseState.LeftButton == ButtonState.Pressed)
-                        gameState = GameState.TitleScreen;
-                break;
-
-                case GameState.TitleScreen:
-                    break;
-
-                case GameState.Playing:
-                    break;
-
-                case GameState.Paused:
-                    break;
+                gameState = GameState.TitleScreen;
             }
         }
 
         private void ProcessKeyboard()
         {
-            switch (gameState)
+            KeyboardState keybState = Keyboard.GetState();
+
+            if (keybState.IsKeyDown(Keys.Left))
             {
-                case GameState.SplashScreen:
-                    if (keybState.IsKeyDown(Keys.Enter) || keybState.IsKeyDown(Keys.Space))
-                        gameState = GameState.TitleScreen;
-                break;
+                players[currentPlayer].Angle -= 0.01f;
+            }
 
-                case GameState.TitleScreen:
-                    if (keybState.IsKeyDown(Keys.Escape))
-                        Exit();
-                break;
+            if (keybState.IsKeyDown(Keys.Right))
+            {
+                players[currentPlayer].Angle += 0.01f;
+            }
 
-                case GameState.Playing:
-                    if (keybState.IsKeyDown(Keys.Left))
-                        players[currentPlayer].Angle -= 0.01f;
-                    if (keybState.IsKeyDown(Keys.Right))
-                        players[currentPlayer].Angle += 0.01f;
+            if (players[currentPlayer].Angle > MathHelper.PiOver2)
+            {
+                players[currentPlayer].Angle = -MathHelper.PiOver2;
+            }
 
-                    if (players[currentPlayer].Angle > MathHelper.PiOver2)
-                        players[currentPlayer].Angle = -MathHelper.PiOver2;
-                    if (players[currentPlayer].Angle < -MathHelper.PiOver2)
-                        players[currentPlayer].Angle = MathHelper.PiOver2;
+            if (players[currentPlayer].Angle < -MathHelper.PiOver2)
+            {
+                players[currentPlayer].Angle = MathHelper.PiOver2;
+            }
 
-                    if (keybState.IsKeyDown(Keys.Down))
-                        players[currentPlayer].Power -= 1;
-                    if (keybState.IsKeyDown(Keys.Up))
-                        players[currentPlayer].Power += 1;
-                    if (keybState.IsKeyDown(Keys.PageDown))
-                        players[currentPlayer].Power -= 20;
-                    if (keybState.IsKeyDown(Keys.PageUp))
-                        players[currentPlayer].Power += 20;
+            if (keybState.IsKeyDown(Keys.Down))
+            {
+                players[currentPlayer].Power -= 1;
+            }
 
-                    if (players[currentPlayer].Power > 1000)
-                        players[currentPlayer].Power = 1000;
-                    if (players[currentPlayer].Power < 0)
-                        players[currentPlayer].Power = 0;
+            if (keybState.IsKeyDown(Keys.Up))
+            {
+                players[currentPlayer].Power += 1;
+            }
 
-                    if (keybState.IsKeyDown(Keys.Space))
-                    {
-                        rocketFlying = true;
-                        launch.Play();
+            if (keybState.IsKeyDown(Keys.PageDown))
+            {
+                players[currentPlayer].Power -= 20;
+            }
 
-                        rocketPosition = players[currentPlayer].Position;
-                        rocketPosition.X += 20;
-                        rocketPosition.Y -= 10;
-                        rocketAngle = players[currentPlayer].Angle;
-                        Vector2 up = new Vector2(0, -1);
-                        Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
-                        rocketDirection = Vector2.Transform(up, rotMatrix);
-                        rocketDirection *= players[currentPlayer].Power / 50.0f;
-                    }
-                break;
+            if (keybState.IsKeyDown(Keys.PageUp))
+            {
+                players[currentPlayer].Power += 20;
+            }
+
+            if (players[currentPlayer].Power > 1000)
+            {
+                players[currentPlayer].Power = 1000;
+            }
+
+            if (players[currentPlayer].Power < 0)
+            {
+                players[currentPlayer].Power = 0;
+            }
+
+            if (keybState.IsKeyDown(Keys.Space))
+            {
+                rocketFlying = true;
+                launch.Play();
+
+                rocketPosition = players[currentPlayer].Position;
+                rocketPosition.X += 20;
+                rocketPosition.Y -= 10;
+                rocketAngle = players[currentPlayer].Angle;
+                Vector2 up = new Vector2(0, -1);
+                Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
+                rocketDirection = Vector2.Transform(up, rotMatrix);
+                rocketDirection *= players[currentPlayer].Power / 50.0f;
             }
         }
     }

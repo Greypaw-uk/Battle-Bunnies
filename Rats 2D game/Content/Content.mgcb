@@ -158,3 +158,9 @@
 /processorParam:TextureFormat=Color
 /build:start.png
 
+#begin titleTheme.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:titleTheme.wav
+

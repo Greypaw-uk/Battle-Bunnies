@@ -15,7 +15,9 @@ namespace Rats_2D_game
         static void Main()
         {
             using (var game = new Game1())
+            {
                 game.Run();
+            }
         }
     }
 #endif
