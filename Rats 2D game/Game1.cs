@@ -108,9 +108,14 @@ namespace Rats_2D_game
 
         protected override void Initialize()
         {
-            if (gameState == GameState.SplashScreen || gameState == GameState.TitleScreen)
+            switch (gameState)
             {
-                IsMouseVisible = true;
+                case GameState.SplashScreen:
+                    IsMouseVisible = true;
+                break;
+                case GameState.TitleScreen:
+                    IsMouseVisible = true;
+                break;
             }
 
             graphics.PreferredBackBufferWidth = 800;
@@ -179,21 +184,28 @@ namespace Rats_2D_game
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
+                Exit();
 
             ProcessMouse();
             ProcessKeyboard();
 
-            if (gameState == GameState.Playing)
+            switch (gameState)
             {
-                if (rocketFlying)
-                {
-                    UpdateRocket();
-                    CheckCollisions(gameTime);
-                }
+                case GameState.SplashScreen:
+                    break;
+                case GameState.TitleScreen:
+                    break;
+                case GameState.Playing:
+                    if (rocketFlying)
+                    {
+                        UpdateRocket();
+                        CheckCollisions(gameTime);
+                    }
 
-                if (particleList.Count > 0)
-                    UpdateParticles(gameTime);
+                    if (particleList.Count > 0)
+                        UpdateParticles(gameTime);
+                    break;
+
             }
 
             base.Update(gameTime);
@@ -209,13 +221,13 @@ namespace Rats_2D_game
                     spriteBatch.Begin();
                     DrawSplashScreen();
                     spriteBatch.End();
-                    break;
+                break;
 
                 case GameState.TitleScreen:
                     spriteBatch.Begin();
                     DrawTitleScreen();
                     spriteBatch.End();
-                    break;
+                break;
 
                 case GameState.Playing:
                     spriteBatch.Begin();
@@ -229,7 +241,7 @@ namespace Rats_2D_game
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
                     DrawExplosion();
                     spriteBatch.End();
-                    break;
+                break;
             }
 
             base.Draw(gameTime);
@@ -386,7 +398,7 @@ namespace Rats_2D_game
                 if (mouseState.LeftButton == ButtonState.Pressed)
                 {
                     gameState = GameState.Playing;
-                }
+                }  
             }
         }
 
@@ -419,8 +431,8 @@ namespace Rats_2D_game
         {
             PlayerData player = players[currentPlayer];
             int currentAngle = (int)MathHelper.ToDegrees(player.Angle);
-            spriteBatch.DrawString(font, "bunny angle: " + currentAngle, new Vector2(20, 20), player.Colour);
-            spriteBatch.DrawString(font, "bunny power: " + player.Power, new Vector2(20, 45), player.Colour);
+            spriteBatch.DrawString(font, "Shot angle: " + currentAngle, new Vector2(20, 20), player.Colour);
+            spriteBatch.DrawString(font, "Shot power: " + player.Power, new Vector2(20, 45), player.Colour);
         }
 
         private void DrawRocket()
@@ -711,10 +723,17 @@ namespace Rats_2D_game
             {
                 case GameState.SplashScreen:
                     if (mouseState.LeftButton == ButtonState.Pressed)
-                    {
                         gameState = GameState.TitleScreen;
-                    }
                 break;
+
+                case GameState.TitleScreen:
+                    break;
+
+                case GameState.Playing:
+                    break;
+
+                case GameState.Paused:
+                    break;
             }
         }
 
@@ -724,16 +743,12 @@ namespace Rats_2D_game
             {
                 case GameState.SplashScreen:
                     if (keybState.IsKeyDown(Keys.Enter) || keybState.IsKeyDown(Keys.Space))
-                    {
                         gameState = GameState.TitleScreen;
-                    }
                 break;
 
                 case GameState.TitleScreen:
                     if (keybState.IsKeyDown(Keys.Escape))
-                    {
                         Exit();
-                    }
                 break;
 
                 case GameState.Playing:
