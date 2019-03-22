@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Media;
@@ -69,6 +70,15 @@ namespace Rats_2D_game
         int numberOfPlayers = 4;
         float playerScaling;
         int currentPlayer = 0;
+        public bool canShoot = false;
+
+//  Weapons
+        enum EquippedWeapon
+        {
+            NoWeapon,
+            RocketLauncher
+        }
+        private EquippedWeapon equippedWeapon = EquippedWeapon.NoWeapon;
 
 //  Rocket Variables
         bool rocketFlying = false;
@@ -94,11 +104,18 @@ namespace Rats_2D_game
             SplashScreen,
             TitleScreen,
             Playing,
-            Paused
+            Paused,
+            WeaponMenu
         }
         GameState gameState = GameState.SplashScreen;
 
+// Controls
+        private MouseState lastMouseState;
+        private MouseState mouseState;
+
+
 // ===========================================
+
 
         public Game1()
         {
@@ -186,6 +203,9 @@ namespace Rats_2D_game
             ProcessMouse();
             ProcessKeyboard();
 
+            lastMouseState = mouseState;
+            mouseState = Mouse.GetState();
+
             if (rocketFlying)
             {
                 UpdateRocket();
@@ -243,6 +263,14 @@ namespace Rats_2D_game
 
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
                     DrawExplosion();
+                    spriteBatch.End();
+                    break;
+                }
+
+                case GameState.WeaponMenu:
+                {
+                    spriteBatch.Begin();
+
                     spriteBatch.End();
                     break;
                 }
@@ -389,7 +417,7 @@ namespace Rats_2D_game
 
         //      #################################################
         //      #                                               #
-        //      #               GRAPHICS                        #
+        //      #               UI AND STUFF                    #
         //      #                                               #
         //      #################################################
 
@@ -398,7 +426,6 @@ namespace Rats_2D_game
         {
             Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
             spriteBatch.Draw(splashScreen, screenRectangle, Color.White);
-
             
         }
 
@@ -414,18 +441,34 @@ namespace Rats_2D_game
             spriteBatch.Draw(startButton, startRectangle, Color.White);
 
             // Clicking Start button
-            if (Mouse.GetState().X > startRectangle.X
-                && Mouse.GetState().X < startRectangle.X + startRectangle.Width
-                && Mouse.GetState().Y > startRectangle.Y
-                && Mouse.GetState().Y < startRectangle.Y + startRectangle.Height)
+            if (mouseState.X > startRectangle.X
+                && mouseState.X < startRectangle.X + startRectangle.Width
+                && mouseState.Y > startRectangle.Y
+                && mouseState.Y < startRectangle.Y + startRectangle.Height)
             {
-                if (Mouse.GetState().LeftButton.Equals(ButtonState.Pressed))
+                if (mouseState.LeftButton.Equals(ButtonState.Pressed) && lastMouseState.LeftButton.Equals(ButtonState.Released))
                 {
-                    
                     gameState = GameState.Playing;
+                    canShoot = false;
                 }  
             }
         }
+
+        private void DrawWeaponMenu()
+        {
+            Rectangle weaponRectangle = new Rectangle();
+            Vector2 weaponMenuLocation = new Vector2(screenHeight-screenHeight, screenWidth - screenWidth);
+
+            spriteBatch.Draw(startButton, weaponMenuLocation, Color.White);
+        }
+
+
+        //      #################################################
+        //      #                                               #
+        //      #               GRAPHICS                        #
+        //      #                                               #
+        //      #################################################
+
 
         private void DrawScenery()
         {
@@ -621,6 +664,8 @@ namespace Rats_2D_game
             {
                 currentPlayer = ++currentPlayer % numberOfPlayers;
             }
+            players[currentPlayer].Angle = 0;
+            players[currentPlayer].Power = 0;
         }
 
 
@@ -760,10 +805,56 @@ namespace Rats_2D_game
 
         private void ProcessMouse()
         {
+            Vector2 mousePointer = new Vector2(mouseState.X, mouseState.Y);
 
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            switch (gameState)
             {
-                gameState = GameState.TitleScreen;
+                case GameState.SplashScreen:
+                    if (mouseState.LeftButton.Equals(ButtonState.Pressed) && (lastMouseState.LeftButton.Equals(ButtonState.Pressed)))
+                    {
+                        gameState = GameState.TitleScreen;
+                    }
+
+                break;
+
+                case GameState.Playing:
+                    Vector2 dPos = players[currentPlayer].Position - mousePointer;
+
+                    players[currentPlayer].Angle = -(float)Math.Atan2(dPos.X, dPos.Y);
+
+                    if (mouseState.LeftButton.Equals(ButtonState.Pressed))
+                    {
+                        canShoot = true;
+                        players[currentPlayer].Power += 5;
+                    }
+
+                    else if (mouseState.LeftButton.Equals(ButtonState.Released))
+                    {
+                        if (canShoot)
+                            switch (equippedWeapon)
+                            {
+                                case EquippedWeapon.NoWeapon:
+
+                                break;
+
+                                case EquippedWeapon.RocketLauncher:
+                                    rocketFlying = true;
+                                    canShoot = false;
+                                    launch.Play();
+
+                                    rocketPosition = players[currentPlayer].Position;
+                                    rocketPosition.X += 20;
+                                    rocketPosition.Y -= 10;
+                                    rocketAngle = players[currentPlayer].Angle;
+                                    Vector2 up = new Vector2(0, -1);
+                                    Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
+                                    rocketDirection = Vector2.Transform(up, rotMatrix);
+                                    rocketDirection *= players[currentPlayer].Power / 50.0f;
+                                break;
+                            }
+                    }
+
+                break;
             }
         }
 
@@ -771,69 +862,80 @@ namespace Rats_2D_game
         {
             KeyboardState keybState = Keyboard.GetState();
 
-            if (keybState.IsKeyDown(Keys.Left))
+            switch(gameState)
             {
-                players[currentPlayer].Angle -= 0.01f;
-            }
+                case GameState.Playing:
 
-            if (keybState.IsKeyDown(Keys.Right))
-            {
-                players[currentPlayer].Angle += 0.01f;
-            }
+                    if (keybState.IsKeyDown(Keys.C))
+                    {
+                        DrawWeaponMenu();
+                    }
 
-            if (players[currentPlayer].Angle > MathHelper.PiOver2)
-            {
-                players[currentPlayer].Angle = -MathHelper.PiOver2;
-            }
+                    if (keybState.IsKeyDown(Keys.Left))
+                    {
+                        players[currentPlayer].Angle -= 0.01f;
+                    }
 
-            if (players[currentPlayer].Angle < -MathHelper.PiOver2)
-            {
-                players[currentPlayer].Angle = MathHelper.PiOver2;
-            }
+                    if (keybState.IsKeyDown(Keys.Right))
+                    {
+                        players[currentPlayer].Angle += 0.01f;
+                    }
 
-            if (keybState.IsKeyDown(Keys.Down))
-            {
-                players[currentPlayer].Power -= 1;
-            }
+                    if (players[currentPlayer].Angle > MathHelper.PiOver2)
+                    {
+                        players[currentPlayer].Angle = -MathHelper.PiOver2;
+                    }
 
-            if (keybState.IsKeyDown(Keys.Up))
-            {
-                players[currentPlayer].Power += 1;
-            }
+                    if (players[currentPlayer].Angle < -MathHelper.PiOver2)
+                    {
+                        players[currentPlayer].Angle = MathHelper.PiOver2;
+                    }
 
-            if (keybState.IsKeyDown(Keys.PageDown))
-            {
-                players[currentPlayer].Power -= 20;
-            }
+                    if (keybState.IsKeyDown(Keys.Down))
+                    {
+                        players[currentPlayer].Power -= 1;
+                    }
 
-            if (keybState.IsKeyDown(Keys.PageUp))
-            {
-                players[currentPlayer].Power += 20;
-            }
+                    if (keybState.IsKeyDown(Keys.Up))
+                    {
+                        players[currentPlayer].Power += 1;
+                    }
 
-            if (players[currentPlayer].Power > 1000)
-            {
-                players[currentPlayer].Power = 1000;
-            }
+                    if (keybState.IsKeyDown(Keys.PageDown))
+                    {
+                        players[currentPlayer].Power -= 20;
+                    }
 
-            if (players[currentPlayer].Power < 0)
-            {
-                players[currentPlayer].Power = 0;
-            }
+                    if (keybState.IsKeyDown(Keys.PageUp))
+                    {
+                        players[currentPlayer].Power += 20;
+                    }
 
-            if (keybState.IsKeyDown(Keys.Space))
-            {
-                rocketFlying = true;
-                launch.Play();
+                    if (players[currentPlayer].Power > 1000)
+                    {
+                        players[currentPlayer].Power = 1000;
+                    }
 
-                rocketPosition = players[currentPlayer].Position;
-                rocketPosition.X += 20;
-                rocketPosition.Y -= 10;
-                rocketAngle = players[currentPlayer].Angle;
-                Vector2 up = new Vector2(0, -1);
-                Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
-                rocketDirection = Vector2.Transform(up, rotMatrix);
-                rocketDirection *= players[currentPlayer].Power / 50.0f;
+                    if (players[currentPlayer].Power < 0)
+                    {
+                        players[currentPlayer].Power = 0;
+                    }
+
+                    if (keybState.IsKeyDown(Keys.Space))
+                    {
+                        rocketFlying = true;
+                        launch.Play();
+
+                        rocketPosition = players[currentPlayer].Position;
+                        rocketPosition.X += 20;
+                        rocketPosition.Y -= 10;
+                        rocketAngle = players[currentPlayer].Angle;
+                        Vector2 up = new Vector2(0, -1);
+                        Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
+                        rocketDirection = Vector2.Transform(up, rotMatrix);
+                        rocketDirection *= players[currentPlayer].Power / 50.0f;
+                    }
+                break;
             }
         }
     }
