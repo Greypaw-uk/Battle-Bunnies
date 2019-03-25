@@ -1,15 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Media;
 
 namespace Rats_2D_game
-{ 
+{
     public struct PlayerData
     {
         public Vector2 Position;
@@ -50,6 +48,8 @@ namespace Rats_2D_game
         Texture2D smokeTexture;
         Texture2D groundTexture;
         Texture2D explosionTexture;
+
+        private Texture2D launcherIcon;
 
 //  GUI 
         private Texture2D splashScreen;
@@ -164,12 +164,14 @@ namespace Rats_2D_game
             startButton = Content.Load<Texture2D>("start");
 
             backgroundTexture = Content.Load<Texture2D>("background");
-            launcherTexture = Content.Load<Texture2D>("body");
             bunnyTexture = Content.Load<Texture2D>("launcher");
+            launcherTexture = Content.Load<Texture2D>("body");
             rocketTexture = Content.Load<Texture2D>("rocket");
             smokeTexture = Content.Load<Texture2D>("smoke");
             groundTexture = Content.Load<Texture2D>("foreground");
             explosionTexture = Content.Load<Texture2D>("explosion");
+
+            launcherIcon = Content.Load<Texture2D>("launcherIcon");
 
             GenerateTerrainContour();
             SetUpPlayers();
@@ -238,7 +240,7 @@ namespace Rats_2D_game
                 case GameState.SplashScreen:
                 {
                     spriteBatch.Begin();
-                    DrawSplashScreen();
+                        DrawSplashScreen();
                     spriteBatch.End();
                     break;
                 }
@@ -246,7 +248,7 @@ namespace Rats_2D_game
                 case GameState.TitleScreen:
                 {
                     spriteBatch.Begin();
-                    DrawTitleScreen();
+                        DrawTitleScreen();
                     spriteBatch.End();
                     break;
                 }
@@ -254,15 +256,15 @@ namespace Rats_2D_game
                 case GameState.Playing:
                 {
                     spriteBatch.Begin();
-                    DrawScenery();
-                    DrawPlayers();
-                    DrawText();
-                    DrawRocket();
-                    DrawSmoke();
-                    spriteBatch.End();
+                        DrawScenery();
+                        DrawPlayers();
+                        DrawText();
+                        DrawRocket();
+                        DrawSmoke();
+                        spriteBatch.End();
 
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
-                    DrawExplosion();
+                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+                        DrawExplosion();
                     spriteBatch.End();
                     break;
                 }
@@ -270,7 +272,7 @@ namespace Rats_2D_game
                 case GameState.WeaponMenu:
                 {
                     spriteBatch.Begin();
-
+                        DrawWeaponMenu();
                     spriteBatch.End();
                     break;
                 }
@@ -424,9 +426,8 @@ namespace Rats_2D_game
 
         private void DrawSplashScreen()
         {
-            Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
-            spriteBatch.Draw(splashScreen, screenRectangle, Color.White);
-            
+            Rectangle splashScreenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
+            spriteBatch.Draw(splashScreen, splashScreenRectangle, Color.White);
         }
 
         private void DrawTitleScreen()
@@ -435,9 +436,9 @@ namespace Rats_2D_game
             var _startY = screenHeight * 0.5f;
 
             Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
-            Rectangle startRectangle = new Rectangle((int)_startX, (int)_startY, 200, 100);
-
             spriteBatch.Draw(titleScreen, screenRectangle, Color.White);
+
+            Rectangle startRectangle = new Rectangle((int)_startX, (int)_startY, 200, 100);
             spriteBatch.Draw(startButton, startRectangle, Color.White);
 
             // Clicking Start button
@@ -456,10 +457,25 @@ namespace Rats_2D_game
 
         private void DrawWeaponMenu()
         {
-            Rectangle weaponRectangle = new Rectangle();
-            Vector2 weaponMenuLocation = new Vector2(screenHeight-screenHeight, screenWidth - screenWidth);
+            Rectangle weaponMenuRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
+            spriteBatch.Draw(titleScreen, weaponMenuRectangle, Color.White);
 
-            spriteBatch.Draw(startButton, weaponMenuLocation, Color.White);
+        // Rocket Launcher
+
+            Rectangle rocketRectangle = new Rectangle(0, 0, 100, 100);
+            spriteBatch.Draw(launcherIcon, rocketRectangle, Color.White);
+
+            if (mouseState.X > rocketRectangle.X
+                && mouseState.X < rocketRectangle.X + launcherIcon.Width
+                && mouseState.Y > rocketRectangle.Y
+                && mouseState.Y < rocketRectangle.Y + launcherIcon.Height)
+            {
+                if (mouseState.LeftButton.Equals(ButtonState.Pressed) && lastMouseState.LeftButton.Equals(ButtonState.Released))
+                {
+                    equippedWeapon = EquippedWeapon.RocketLauncher;
+                    gameState = GameState.Playing;
+                }
+            }
         }
 
 
@@ -868,7 +884,8 @@ namespace Rats_2D_game
 
                     if (keybState.IsKeyDown(Keys.C))
                     {
-                        DrawWeaponMenu();
+                        gameState = GameState.WeaponMenu;
+                        canShoot = false;
                     }
 
                     if (keybState.IsKeyDown(Keys.Left))
@@ -934,6 +951,13 @@ namespace Rats_2D_game
                         Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
                         rocketDirection = Vector2.Transform(up, rotMatrix);
                         rocketDirection *= players[currentPlayer].Power / 50.0f;
+                    }
+                break;
+
+                case GameState.WeaponMenu:
+                    if (keybState.IsKeyDown(Keys.Escape))
+                    {
+                        gameState = GameState.Playing;
                     }
                 break;
             }
