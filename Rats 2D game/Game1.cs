@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Rats_2D_game
 {
@@ -44,20 +43,28 @@ namespace Rats_2D_game
 //  GAME TEXTURES
         Texture2D backgroundTexture;
         Texture2D foregroundTexture;
-        Texture2D launcherTexture;
+        private Texture2D candySkulls;
+
         Texture2D bunnyTexture;
         Texture2D rocketTexture;
         Texture2D smokeTexture;
         Texture2D groundTexture;
         Texture2D explosionTexture;
 
+        private Texture2D noWeaponTexture;
+        Texture2D launcherTexture;
+        private Texture2D grenadeTexture;
+
         private Texture2D launcherIcon;
+        private Texture2D grenadeIcon;
 
 //  GUI 
         private Texture2D splashScreen;
         private Texture2D titleScreen;
         private Texture2D startButton;
         private Texture2D weaponMenu;
+
+        Color myTransparentColor = new Color(0, 0, 0, 127);
 
         SpriteFont font;
 
@@ -82,16 +89,21 @@ namespace Rats_2D_game
         enum EquippedWeapon
         {
             NoWeapon,
-            RocketLauncher
+            RocketLauncher,
+            Grenade
         }
         private EquippedWeapon equippedWeapon = EquippedWeapon.NoWeapon;
 
-//  Rocket Variables
+//  Weapon Variables
         bool rocketFlying = false;
-        Vector2 rocketPosition;
-        Vector2 rocketDirection;
-        float rocketAngle;
-        float rocketScaling = 0.1f;
+        private bool grenadeThrown = false;
+
+        Vector2 projectilePosition;
+        Vector2 projectileDirection;
+        float projectileAngle;
+        float projectileScaling = 0.1f;
+
+        private float weaponFuse = 0;
 
 //  Colour Arrays
         Color[,] rocketColourArray;
@@ -99,6 +111,7 @@ namespace Rats_2D_game
         Color[,] launcherColourArray;
         Color[,] bunnyColourArray;
         Color[,] explosionColourArray;
+        private Color[,] grenadeColourArray;
 
 //  Misc
         List<Vector2> smokeList = new List<Vector2>(); Random randomiser = new Random();
@@ -124,7 +137,7 @@ namespace Rats_2D_game
         float TIMER = 0;
 
 
-        // ===========================================
+// ===========================================
 
 
         public Game1()
@@ -175,14 +188,18 @@ namespace Rats_2D_game
             weaponMenu = Content.Load<Texture2D>("weaponMenu");
 
             backgroundTexture = Content.Load<Texture2D>("background");
-            bunnyTexture = Content.Load<Texture2D>("launcher");
-            launcherTexture = Content.Load<Texture2D>("body");
+            bunnyTexture = Content.Load<Texture2D>("body");
             rocketTexture = Content.Load<Texture2D>("rocket");
             smokeTexture = Content.Load<Texture2D>("smoke");
-            groundTexture = Content.Load<Texture2D>("foreground");
+            groundTexture = Content.Load<Texture2D>("candySkulls");
             explosionTexture = Content.Load<Texture2D>("explosion");
 
+            noWeaponTexture = Content.Load<Texture2D>("noWeapon");
+            launcherTexture = Content.Load<Texture2D>("launcher");
+            grenadeTexture = Content.Load<Texture2D>("holdingGrenade");
+
             launcherIcon = Content.Load<Texture2D>("launcherIcon");
+            grenadeIcon = Content.Load<Texture2D>("grenadeIcon");
 
             GenerateTerrainContour();
             SetUpPlayers();
@@ -224,7 +241,13 @@ namespace Rats_2D_game
                 CheckCollisions(gameTime);
             }
 
-            //  GAME TIMER
+            if (grenadeThrown)
+            {
+                UpdateGrenade();
+                CheckCollisions(gameTime);
+            }
+
+        //  GAME TIMER
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             timer -= elapsed;
             if (timer < 0)
@@ -233,7 +256,11 @@ namespace Rats_2D_game
                 timer = TIMER;   //Reset Timer
             }
 
-            //  PARTICLE GENERATION
+        //  FUSE TIMER
+            float fuseBurn = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            weaponFuse -= fuseBurn;
+
+        //  PARTICLE GENERATION
             if (particleList.Count > 0)
             {
                 UpdateParticles(gameTime);
@@ -283,10 +310,11 @@ namespace Rats_2D_game
                         DrawPlayers();
                         DrawText();
                         DrawRocket();
+                        DrawGrenade();
                         DrawSmoke();
-                        spriteBatch.End();
+                    spriteBatch.End();
 
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
                         DrawExplosion();
                     spriteBatch.End();
                     break;
@@ -375,6 +403,7 @@ namespace Rats_2D_game
 
 
         private void GenerateTerrainContour()
+        //  Generates 3 waves with a random offset, which will form the foreground
         {
             terrainContour = new int[screenWidth];
 
@@ -480,7 +509,7 @@ namespace Rats_2D_game
         private void DrawWeaponMenu()
         {
             Rectangle weaponMenuRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
-            spriteBatch.Draw(weaponMenu, weaponMenuRectangle, Color.White);
+            spriteBatch.Draw(weaponMenu, weaponMenuRectangle, myTransparentColor);
 
         // Rocket Launcher
 
@@ -495,6 +524,23 @@ namespace Rats_2D_game
                 if (mouseState.LeftButton.Equals(ButtonState.Pressed) && lastMouseState.LeftButton.Equals(ButtonState.Released))
                 {
                     equippedWeapon = EquippedWeapon.RocketLauncher;
+                    gameState = GameState.Playing;
+                    timer = 1;
+                }
+            }
+
+        // Grenade
+            Rectangle grenadeRectangle = new Rectangle(180, 10, 100, 100);
+            spriteBatch.Draw(grenadeIcon, grenadeRectangle, Color.White);
+
+            if (mouseState.X > grenadeRectangle.X
+                && mouseState.X < grenadeRectangle.X + grenadeIcon.Width
+                && mouseState.Y > grenadeRectangle.Y
+                && mouseState.Y < grenadeRectangle.Y + grenadeIcon.Height)
+            {
+                if (mouseState.LeftButton.Equals(ButtonState.Pressed) && lastMouseState.LeftButton.Equals(ButtonState.Released))
+                {
+                    equippedWeapon = EquippedWeapon.Grenade;
                     gameState = GameState.Playing;
                     timer = 1;
                 }
@@ -534,9 +580,24 @@ namespace Rats_2D_game
                     int yPos = (int)player.Position.Y;
                     Vector2 bunnyOrigin = new Vector2(22, 22);
 
-                    spriteBatch.Draw(bunnyTexture, new Vector2(xPos + 20, yPos - 20), null, player.Colour, player.Angle, bunnyOrigin,
-                        playerScaling, SpriteEffects.None, 1);
-                    spriteBatch.Draw(launcherTexture, player.Position, null, player.Colour, 0, new Vector2(0, launcherTexture.Height), 
+                    // Draw some weapons
+                    switch (equippedWeapon)
+                    {
+                        case EquippedWeapon.NoWeapon:
+                            spriteBatch.Draw(noWeaponTexture, new Vector2(xPos + 20, yPos - 20), null, player.Colour, player.Angle, bunnyOrigin,
+                                playerScaling, SpriteEffects.None, 1);
+                            break;
+                        case EquippedWeapon.Grenade:
+                            spriteBatch.Draw(grenadeTexture, new Vector2(xPos + 20, yPos - 20), null, player.Colour, player.Angle, bunnyOrigin,
+                                playerScaling, SpriteEffects.None, 1);
+                            break;
+                        case EquippedWeapon.RocketLauncher:
+                            spriteBatch.Draw(launcherTexture, new Vector2(xPos + 20, yPos - 20), null, player.Colour, player.Angle, bunnyOrigin,
+                                playerScaling, SpriteEffects.None, 1);
+                            break;
+                    }
+                    //  Draw some bunnies
+                    spriteBatch.Draw(bunnyTexture, player.Position, null, player.Colour, 0, new Vector2(0, bunnyTexture.Height),
                         playerScaling, SpriteEffects.None, 0);
                 }
             }
@@ -546,7 +607,16 @@ namespace Rats_2D_game
         {
             if (rocketFlying)
             {
-                spriteBatch.Draw(rocketTexture, rocketPosition, null, players[currentPlayer].Colour, rocketAngle, 
+                spriteBatch.Draw(rocketTexture, projectilePosition, null, players[currentPlayer].Colour, projectileAngle, 
+                    new Vector2(42, 240), 0.1f, SpriteEffects.None, 1);
+            }
+        }
+
+        private void DrawGrenade()
+        {
+            if (grenadeThrown)
+            {
+                spriteBatch.Draw(grenadeIcon, projectilePosition, null, players[currentPlayer].Colour, projectileAngle,
                     new Vector2(42, 240), 0.1f, SpriteEffects.None, 1);
             }
         }
@@ -679,18 +749,36 @@ namespace Rats_2D_game
                         break;
 
                     case EquippedWeapon.RocketLauncher:
+                    {
                         rocketFlying = true;
                         launch.Play();
 
-                        rocketPosition = players[currentPlayer].Position;
-                        rocketPosition.X += 20;
-                        rocketPosition.Y -= 10;
-                        rocketAngle = players[currentPlayer].Angle;
+                        projectilePosition = players[currentPlayer].Position;
+                        projectilePosition.X += 20;
+                        projectilePosition.Y -= 10;
+                        projectileAngle = players[currentPlayer].Angle;
                         Vector2 up = new Vector2(0, -1);
-                        Matrix rotMatrix = Matrix.CreateRotationZ(rocketAngle);
-                        rocketDirection = Vector2.Transform(up, rotMatrix);
-                        rocketDirection *= players[currentPlayer].Power / 50.0f;
-                        break;
+                        Matrix rotMatrix = Matrix.CreateRotationZ(projectileAngle);
+                        projectileDirection = Vector2.Transform(up, rotMatrix);
+                        projectileDirection *= players[currentPlayer].Power / 50.0f;
+                    }
+                    break;
+
+                    case EquippedWeapon.Grenade:
+                    {
+                        weaponFuse = 5;
+                        grenadeThrown = true;
+
+                        projectilePosition = players[currentPlayer].Position;
+                        projectilePosition.X += 20;
+                        projectilePosition.Y -= 10;
+                        projectileAngle = players[currentPlayer].Angle;
+                        Vector2 grenadeGrav = new Vector2(0, -1);
+                        Matrix grenadeSpin = Matrix.CreateRotationZ(projectileAngle);
+                        projectileDirection = Vector2.Transform(grenadeGrav, grenadeSpin);
+                        projectileDirection *= players[currentPlayer].Power / 50.0f;
+                    }
+                    break;
                 }
             }
         }
@@ -700,13 +788,13 @@ namespace Rats_2D_game
             if (rocketFlying)
             {
                 Vector2 gravity = new Vector2(0, 1);
-                rocketDirection += gravity / 10.0f;
-                rocketPosition += rocketDirection;
-                rocketAngle = (float)Math.Atan2(rocketDirection.X, -rocketDirection.Y);
+                projectileDirection += gravity / 10.0f;
+                projectilePosition += projectileDirection;
+                projectileAngle = (float)Math.Atan2(projectileDirection.X, -projectileDirection.Y);
 
                 for (int i = 0; i < 5; i++)
                 {
-                    Vector2 smokePos = rocketPosition;
+                    Vector2 smokePos = projectilePosition;
                     smokePos.X += randomiser.Next(10) - 5;
                     smokePos.Y += randomiser.Next(10) - 5;
                     smokeList.Add(smokePos);
@@ -714,11 +802,31 @@ namespace Rats_2D_game
             }
         }
 
+        private void UpdateGrenade()
+        {
+            if (grenadeThrown)
+            {
+                if (weaponFuse <=0)
+                {
+                    grenadeThrown = false;
+
+                    smokeList = new List<Vector2>();
+                    AddExplosion(projectilePosition, 10, 80.0f, 2000.0f, new GameTime());
+
+                    NextPlayer();
+                }
+                Vector2 gravity = new Vector2(0, 1);
+                projectileDirection += gravity / 10.0f;
+                projectilePosition += projectileDirection;
+                projectileAngle = (float)Math.Atan2(projectileDirection.X, -projectileDirection.Y);
+            }
+        }
+
         private bool CheckOutOfScreen()
         {
-            bool rocketOutOfScreen = rocketPosition.Y > screenHeight;
-            rocketOutOfScreen |= rocketPosition.X < 0;
-            rocketOutOfScreen |= rocketPosition.X > screenWidth;
+            bool rocketOutOfScreen = projectilePosition.Y > screenHeight;
+            rocketOutOfScreen |= projectilePosition.X < 0;
+            rocketOutOfScreen |= projectilePosition.X > screenWidth;
 
             return rocketOutOfScreen;
         }
@@ -784,17 +892,19 @@ namespace Rats_2D_game
 
         private Vector2 CheckTerrainCollision()
         {
-            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(rocketAngle) * Matrix.CreateScale(rocketScaling) 
-                * Matrix.CreateTranslation(rocketPosition.X, rocketPosition.Y, 0);
+            Matrix projectileMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(projectileAngle) *
+                                Matrix.CreateScale(projectileScaling)
+                                * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
             Matrix terrainMat = Matrix.Identity;
-            Vector2 terrainCollisionPoint = TexturesCollide(rocketColourArray, rocketMat, foregroundColourArray, terrainMat);
+            Vector2 terrainCollisionPoint =
+                TexturesCollide(rocketColourArray, projectileMat, foregroundColourArray, terrainMat);
             return terrainCollisionPoint;
         }
 
         private Vector2 CheckPlayersCollision()
         {
-            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(rocketAngle) * Matrix.CreateScale(rocketScaling) 
-                * Matrix.CreateTranslation(rocketPosition.X, rocketPosition.Y, 0);
+            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(projectileAngle) * Matrix.CreateScale(projectileScaling) 
+                * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
             for (int i = 0; i < numberOfPlayers; i++)
             {
                 PlayerData player = players[i];
@@ -833,31 +943,64 @@ namespace Rats_2D_game
         {
             Vector2 terrainCollisionPoint = CheckTerrainCollision();
             Vector2 playerCollisionPoint = CheckPlayersCollision();
-            bool rocketOutOfScreen = CheckOutOfScreen();
+            bool projectileOutOfScreen = CheckOutOfScreen();
+
+            // Check Projectile Collision with Player
 
             if (playerCollisionPoint.X > -1)
             {
-                rocketFlying = false;
+                if(rocketFlying)
+                { 
+                    rocketFlying = false;
 
-                smokeList = new List<Vector2>(); AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
+                    smokeList = new List<Vector2>();
+                    AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
 
-                hitbunny.Play();
-                NextPlayer();
+                    hitbunny.Play();
+                    NextPlayer();
+                }
+                if (grenadeThrown)
+                {
+                    /*
+                    grenadeThrown = false;
+
+                    smokeList = new List<Vector2>();
+                    AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
+
+                    NextPlayer();
+                    */
+                }
             }
 
+
+            // Check Projectile Collision with Terrain
             if (terrainCollisionPoint.X > -1)
             {
-                rocketFlying = false;
+                if (rocketFlying)
+                {
+                    rocketFlying = false;
 
-                smokeList = new List<Vector2>(); AddExplosion(terrainCollisionPoint, 4, 30.0f, 1000.0f, gameTime);
+                    smokeList = new List<Vector2>();
+                    AddExplosion(terrainCollisionPoint, 4, 30.0f, 1000.0f, gameTime);
 
-                hitTerrain.Play();
-                NextPlayer();
+                    hitTerrain.Play();
+                    NextPlayer();
+                }
+                else if (grenadeThrown)
+                {
+                    //  Bounce that mofo
+                    projectilePosition = -projectilePosition;
+                    players[currentPlayer].Power = (players[currentPlayer].Power / 2);
+                }
+
             }
 
-            if (rocketOutOfScreen)
+
+            // 'Removes' projectiles when they touch the bottom of the screen, or they go too far left/right
+            if (projectileOutOfScreen)
             {
                 rocketFlying = false;
+                grenadeThrown = false;
 
                 smokeList = new List<Vector2>();
                 NextPlayer();
