@@ -183,7 +183,7 @@ namespace Rats_2D_game
 
             splashScreen = Content.Load<Texture2D>("splash");
 
-            titleScreen = Content.Load<Texture2D>("title");
+            titleScreen = Content.Load<Texture2D>("titleScreen");
             startButton = Content.Load<Texture2D>("start");
             weaponMenu = Content.Load<Texture2D>("weaponMenu");
 
@@ -484,13 +484,13 @@ namespace Rats_2D_game
 
         private void DrawTitleScreen()
         {
-            var _startX = screenWidth * 0.2f;
-            var _startY = screenHeight * 0.5f;
+            var _startX = screenWidth / 2;
+            var _startY = screenHeight / 2;
 
             Rectangle screenRectangle = new Rectangle(0, 0, screenWidth, screenHeight);
             spriteBatch.Draw(titleScreen, screenRectangle, Color.White);
 
-            Rectangle startRectangle = new Rectangle((int)_startX, (int)_startY, 200, 100);
+            Rectangle startRectangle = new Rectangle((int)_startX - 100, (int)_startY - 50, 200, 100);
             spriteBatch.Draw(startButton, startRectangle, Color.White);
 
             // Clicking Start button
