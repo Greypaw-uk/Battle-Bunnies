@@ -248,3 +248,15 @@
 /processorParam:TextureFormat=Color
 /build:titleScreen.png
 
+#begin C:/Users/John/Google Drive/Battle Bunny Resources/hitbunny.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:C:/Users/John/Google Drive/Battle Bunny Resources/hitbunny.wav
+
+#begin rabbitDeath.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:rabbitDeath.wav
+

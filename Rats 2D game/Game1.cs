@@ -16,6 +16,7 @@ namespace Rats_2D_game
         public Color Colour;
         public float Angle;
         public float Power;
+        public float weaponFuse;
     }
 
     public struct ParticleData
@@ -132,6 +133,9 @@ namespace Rats_2D_game
         private MouseState lastMouseState;
         private MouseState mouseState;
 
+        private KeyboardState lastKeyboardState;
+        private KeyboardState keyboardState;
+
 //  GAME TIMER
         float timer = 0;
         float TIMER = 0;
@@ -214,7 +218,7 @@ namespace Rats_2D_game
 
             explosionColourArray = TextureTo2DArray(explosionTexture);
 
-            hitbunny = Content.Load<SoundEffect>("hitbunny");
+            hitbunny = Content.Load<SoundEffect>("rabbitDeath");
             hitTerrain = Content.Load<SoundEffect>("hitterrain");
             launch = Content.Load<SoundEffect>("launch");
         }
@@ -232,6 +236,9 @@ namespace Rats_2D_game
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
 
+        // KEYBOARD CONTROLS
+            lastKeyboardState = keyboardState;
+            keyboardState = Keyboard.GetState();
 
         //  WEAPON LOGIC
 
@@ -243,8 +250,12 @@ namespace Rats_2D_game
 
             if (grenadeThrown)
             {
-                UpdateGrenade();
+                UpdateGrenade(gameTime);
                 CheckCollisions(gameTime);
+
+                //  FUSE TIMER
+                float fuseBurn = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                players[currentPlayer].weaponFuse -= fuseBurn;
             }
 
         //  GAME TIMER
@@ -256,9 +267,7 @@ namespace Rats_2D_game
                 timer = TIMER;   //Reset Timer
             }
 
-        //  FUSE TIMER
-            float fuseBurn = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            weaponFuse -= fuseBurn;
+
 
         //  PARTICLE GENERATION
             if (particleList.Count > 0)
@@ -357,10 +366,11 @@ namespace Rats_2D_game
             players = new PlayerData[numberOfPlayers];
             for (int i = 0; i < numberOfPlayers; i++)
             {
+                players[i].weaponFuse = 5;
                 players[i].IsAlive = true;
                 players[i].Colour = playerColors[i];
                 players[i].Angle = MathHelper.ToRadians(90);
-                players[i].Power = 100;
+                players[i].Power = 0;
                 players[i].Position = new Vector2();
                 players[i].Position.X = screenWidth / (numberOfPlayers + 1) * (i + 1);
                 players[i].Position.Y = terrainContour[(int)players[i].Position.X];
@@ -553,6 +563,7 @@ namespace Rats_2D_game
             int currentAngle = (int)MathHelper.ToDegrees(player.Angle);
             spriteBatch.DrawString(font, "Shot angle: " + currentAngle, new Vector2(20, 20), player.Colour);
             spriteBatch.DrawString(font, "Shot power: " + player.Power, new Vector2(20, 45), player.Colour);
+            spriteBatch.DrawString(font, "Fuse Timer: " + player.weaponFuse, new Vector2(20, 60), player.Colour);
         }
 
 
@@ -766,7 +777,6 @@ namespace Rats_2D_game
 
                     case EquippedWeapon.Grenade:
                     {
-                        weaponFuse = 5;
                         grenadeThrown = true;
 
                         projectilePosition = players[currentPlayer].Position;
@@ -802,16 +812,19 @@ namespace Rats_2D_game
             }
         }
 
-        private void UpdateGrenade()
+        private void UpdateGrenade(GameTime gameTime)
         {
             if (grenadeThrown)
             {
-                if (weaponFuse <=0)
+                if (players[currentPlayer].weaponFuse <=0)
                 {
-                    grenadeThrown = false;
-
+                    // TODO explosion at grenade's location when weaponFuse <= 0
                     smokeList = new List<Vector2>();
-                    AddExplosion(projectilePosition, 10, 80.0f, 2000.0f, new GameTime());
+
+                    AddExplosion(projectilePosition, 10, 80.0f, 2000.0f, gameTime);
+                    hitTerrain.Play();
+
+                    grenadeThrown = false;
 
                     NextPlayer();
                 }
@@ -839,6 +852,7 @@ namespace Rats_2D_game
             {
                 currentPlayer = ++currentPlayer % numberOfPlayers;
             }
+            players[currentPlayer].weaponFuse = 5;
             players[currentPlayer].Angle = 0;
             players[currentPlayer].Power = 0;
             equippedWeapon = EquippedWeapon.NoWeapon;
@@ -886,15 +900,16 @@ namespace Rats_2D_game
                     }
                 }
             }
-
             return new Vector2(-1, -1);
         }
 
         private Vector2 CheckTerrainCollision()
         {
-            Matrix projectileMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(projectileAngle) *
-                                Matrix.CreateScale(projectileScaling)
-                                * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
+            Matrix projectileMat = Matrix.CreateTranslation(-42, -240, 0) 
+                * Matrix.CreateRotationZ(projectileAngle) 
+                * Matrix.CreateScale(projectileScaling)
+                * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
+
             Matrix terrainMat = Matrix.Identity;
             Vector2 terrainCollisionPoint =
                 TexturesCollide(rocketColourArray, projectileMat, foregroundColourArray, terrainMat);
@@ -903,8 +918,11 @@ namespace Rats_2D_game
 
         private Vector2 CheckPlayersCollision()
         {
-            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) * Matrix.CreateRotationZ(projectileAngle) * Matrix.CreateScale(projectileScaling) 
+            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0) 
+                * Matrix.CreateRotationZ(projectileAngle) 
+                * Matrix.CreateScale(projectileScaling) 
                 * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
+
             for (int i = 0; i < numberOfPlayers; i++)
             {
                 PlayerData player = players[i];
@@ -915,8 +933,10 @@ namespace Rats_2D_game
                         int xPos = (int)player.Position.X;
                         int yPos = (int)player.Position.Y;
 
-                        Matrix launcherMat = Matrix.CreateTranslation(0, -launcherTexture.Height, 0) * Matrix.CreateScale(playerScaling) 
+                        Matrix launcherMat = Matrix.CreateTranslation(0, -launcherTexture.Height, 0) 
+                            * Matrix.CreateScale(playerScaling) 
                             * Matrix.CreateTranslation(xPos, yPos, 0);
+
                         Vector2 launcherCollisionPoint = TexturesCollide(launcherColourArray, launcherMat, rocketColourArray, rocketMat);
 
                         if (launcherCollisionPoint.X > -1)
@@ -925,8 +945,11 @@ namespace Rats_2D_game
                             return launcherCollisionPoint;
                         }
 
-                        Matrix bunnyMat = Matrix.CreateTranslation(-11, -50, 0) * Matrix.CreateRotationZ(player.Angle) 
-                            * Matrix.CreateScale(playerScaling) * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
+                        Matrix bunnyMat = Matrix.CreateTranslation(-11, -50, 0) 
+                            * Matrix.CreateRotationZ(player.Angle) 
+                            * Matrix.CreateScale(playerScaling) 
+                            * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
+
                         Vector2 bunnyCollisionPoint = TexturesCollide(bunnyColourArray, bunnyMat, rocketColourArray, rocketMat);
                         if (bunnyCollisionPoint.X > -1)
                         {
@@ -956,19 +979,13 @@ namespace Rats_2D_game
                     smokeList = new List<Vector2>();
                     AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
 
+                    hitTerrain.Play();
                     hitbunny.Play();
                     NextPlayer();
                 }
                 if (grenadeThrown)
                 {
-                    /*
-                    grenadeThrown = false;
-
-                    smokeList = new List<Vector2>();
-                    AddExplosion(playerCollisionPoint, 10, 80.0f, 2000.0f, gameTime);
-
-                    NextPlayer();
-                    */
+                    // TODO ensure grenade does not kill player on contact unless exploding
                 }
             }
 
@@ -988,9 +1005,20 @@ namespace Rats_2D_game
                 }
                 else if (grenadeThrown)
                 {
-                    //  Bounce that mofo
-                    projectilePosition = -projectilePosition;
-                    players[currentPlayer].Power = (players[currentPlayer].Power / 2);
+                    //  Bounce that mofo 
+                    //TODO - update direction in accordance to the terrain that the grenade hits, rather than just reverting the direction of travel
+                    //TODO - decrease travel velocity after a bounce
+                    
+
+                    if (timer <= 0)
+                    {
+                        timer = 0.5f;
+                        projectileDirection = -projectileDirection;
+                        if (players[currentPlayer].Power < 0)
+                        {
+                            players[currentPlayer].Power = 0;
+                        }
+                    }
                 }
 
             }
@@ -1046,6 +1074,10 @@ namespace Rats_2D_game
                         && equippedWeapon != EquippedWeapon.NoWeapon)
                     {
                         players[currentPlayer].Power += 5;
+                        if (players[currentPlayer].Power > 500)
+                        {
+                            players[currentPlayer].Power = 500;
+                        }
                         canShoot = true;
                     }
 
@@ -1070,22 +1102,33 @@ namespace Rats_2D_game
         }
 
         private void ProcessKeyboard()
-        {
-            KeyboardState keybState = Keyboard.GetState();
-
+        { 
             switch(gameState)
             {
                 case GameState.Playing:
 
-                    if (keybState.IsKeyDown(Keys.C))
+                    if (keyboardState.IsKeyDown(Keys.C))
                     {
                         gameState = GameState.WeaponMenu;
                         canShoot = false;
                     }
+
+                    if (keyboardState.IsKeyDown(Keys.F) && lastKeyboardState.IsKeyUp(Keys.F))
+                    {
+                        if (players[currentPlayer].weaponFuse >= 5)
+                        {
+                            players[currentPlayer].weaponFuse = 1;
+                        }
+                        else
+                        {
+                            players[currentPlayer].weaponFuse++;
+                        }
+                    }
+
                 break;
 
                 case GameState.WeaponMenu:
-                    if (keybState.IsKeyDown(Keys.Escape))
+                    if (keyboardState.IsKeyDown(Keys.Escape))
                     {
                         gameState = GameState.Playing;
                     }
