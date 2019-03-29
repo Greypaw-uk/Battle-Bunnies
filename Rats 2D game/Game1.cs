@@ -5,8 +5,9 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
-namespace Rats_2D_game
+namespace BattleBunnies
 {
 
     public struct PlayerData
@@ -44,7 +45,6 @@ namespace Rats_2D_game
 //  GAME TEXTURES
         Texture2D backgroundTexture;
         Texture2D foregroundTexture;
-        private Texture2D candySkulls;
 
         Texture2D bunnyTexture;
         Texture2D rocketTexture;
@@ -84,7 +84,6 @@ namespace Rats_2D_game
 
 //  THROTTLE SHOTS
         private bool canShoot = false;
-        int shotDelay = 0;
 
         //  Weapons
         enum EquippedWeapon
@@ -103,8 +102,6 @@ namespace Rats_2D_game
         Vector2 projectileDirection;
         float projectileAngle;
         float projectileScaling = 0.1f;
-
-        private float weaponFuse = 0;
 
 //  Colour Arrays
         Color[,] rocketColourArray;
@@ -366,7 +363,7 @@ namespace Rats_2D_game
             players = new PlayerData[numberOfPlayers];
             for (int i = 0; i < numberOfPlayers; i++)
             {
-                players[i].weaponFuse = 5;
+                players[i].weaponFuse = 5.0f;
                 players[i].IsAlive = true;
                 players[i].Colour = playerColors[i];
                 players[i].Angle = MathHelper.ToRadians(90);
@@ -818,7 +815,6 @@ namespace Rats_2D_game
             {
                 if (players[currentPlayer].weaponFuse <=0)
                 {
-                    // TODO explosion at grenade's location when weaponFuse <= 0
                     smokeList = new List<Vector2>();
 
                     AddExplosion(projectilePosition, 10, 80.0f, 2000.0f, gameTime);
@@ -837,11 +833,11 @@ namespace Rats_2D_game
 
         private bool CheckOutOfScreen()
         {
-            bool rocketOutOfScreen = projectilePosition.Y > screenHeight;
-            rocketOutOfScreen |= projectilePosition.X < 0;
-            rocketOutOfScreen |= projectilePosition.X > screenWidth;
+            bool projectileOutOfScreen = projectilePosition.Y > screenHeight;
+            projectileOutOfScreen |= projectilePosition.X < 0;
+            projectileOutOfScreen |= projectilePosition.X > screenWidth;
 
-            return rocketOutOfScreen;
+            return projectileOutOfScreen;
         }
 
         private void NextPlayer()
@@ -852,7 +848,7 @@ namespace Rats_2D_game
             {
                 currentPlayer = ++currentPlayer % numberOfPlayers;
             }
-            players[currentPlayer].weaponFuse = 5;
+            players[currentPlayer].weaponFuse = 5.0f;
             players[currentPlayer].Angle = 0;
             players[currentPlayer].Power = 0;
             equippedWeapon = EquippedWeapon.NoWeapon;
@@ -1008,19 +1004,62 @@ namespace Rats_2D_game
                     //  Bounce that mofo 
                     //TODO - update direction in accordance to the terrain that the grenade hits, rather than just reverting the direction of travel
                     //TODO - decrease travel velocity after a bounce
-                    
 
+                    // Find terrainContour[] for where projectile meets terrain
+                    // Take previous terrainContour[] X,Y
+                    // Take next terrainContour[] X,Y
+                    // create a vector2 with those positions and normalise
+                    var point1 = new Vector2(terrainContour[(int)terrainCollisionPoint.X] -1, terrainContour[(int)terrainCollisionPoint.Y] -1);
+                    var point2 = new Vector2(terrainContour[(int)terrainCollisionPoint.X] +1, terrainContour[(int)terrainCollisionPoint.Y ] +1);
+
+                    var cross = (point1.X * point2.Y) - (point1.Y * point2.X);
+                    
+                    Console.WriteLine(cross);
+
+
+
+                    // Take previous projectile's X,Y
+                    // Use current projectile's X,Y to work out Vector2 holding trajectory
+                    // new Vector2[normalisation, trajectory];
+
+                    /*
                     if (timer <= 0)
                     {
-                        timer = 0.5f;
-                        projectileDirection = -projectileDirection;
-                        if (players[currentPlayer].Power < 0)
-                        {
-                            players[currentPlayer].Power = 0;
-                        }
+                        projectileAngle = -projectileAngle;
+                        
+                        timer = 1;
                     }
-                }
+                    */
 
+                    /*
+                    if (terrainCollisionPoint.X > projectilePosition.X)
+                    {
+                        projectileDirection.X *= -1;
+                    }
+
+                    if (terrainCollisionPoint.X < projectileDirection.Y)
+                    {
+                        projectileDirection.X *= 1;
+                    }
+
+
+                    if (terrainCollisionPoint.Y > projectilePosition.Y)
+                    {
+                        projectileDirection.Y *= -1;
+                    }
+
+                    if (terrainCollisionPoint.Y < projectilePosition.Y)
+                    {
+                        projectileDirection.Y *= 1;
+                    }
+
+
+                    if (players[currentPlayer].Power < 0)
+                    {
+                        players[currentPlayer].Power = 0;
+                    }
+                    */
+                }
             }
 
 
@@ -1113,11 +1152,13 @@ namespace Rats_2D_game
                         canShoot = false;
                     }
 
-                    if (keyboardState.IsKeyDown(Keys.F) && lastKeyboardState.IsKeyUp(Keys.F))
+                    if (keyboardState.IsKeyDown(Keys.F) 
+                        && lastKeyboardState.IsKeyUp(Keys.F)
+                        && !grenadeThrown)
                     {
-                        if (players[currentPlayer].weaponFuse >= 5)
+                        if (players[currentPlayer].weaponFuse >= 5.0f)
                         {
-                            players[currentPlayer].weaponFuse = 1;
+                            players[currentPlayer].weaponFuse = 1.0f;
                         }
                         else
                         {
@@ -1130,6 +1171,7 @@ namespace Rats_2D_game
                 case GameState.WeaponMenu:
                     if (keyboardState.IsKeyDown(Keys.Escape))
                     {
+                        equippedWeapon = EquippedWeapon.NoWeapon;
                         gameState = GameState.Playing;
                     }
                 break;

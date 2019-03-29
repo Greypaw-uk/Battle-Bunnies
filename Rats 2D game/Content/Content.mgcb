@@ -116,12 +116,6 @@
 /processorParam:TextureFormat=Color
 /build:launcher.png
 
-#begin hitbunny.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:hitbunny.wav
-
 #begin splash.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -247,12 +241,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:titleScreen.png
-
-#begin C:/Users/John/Google Drive/Battle Bunny Resources/hitbunny.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:C:/Users/John/Google Drive/Battle Bunny Resources/hitbunny.wav
 
 #begin rabbitDeath.wav
 /importer:WavImporter

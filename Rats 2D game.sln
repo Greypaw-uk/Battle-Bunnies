@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.106
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rats 2D game", "Rats 2D game\Rats 2D game.csproj", "{9A6D4331-547E-4998-BD10-662D12982D36}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleBunnies", "Rats 2D game\BattleBunnies.csproj", "{9A6D4331-547E-4998-BD10-662D12982D36}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

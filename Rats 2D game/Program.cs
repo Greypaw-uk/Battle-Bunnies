@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rats_2D_game
+namespace BattleBunnies
 {
 #if WINDOWS || LINUX
     /// <summary>
