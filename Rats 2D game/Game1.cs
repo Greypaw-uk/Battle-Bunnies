@@ -1002,63 +1002,15 @@ namespace BattleBunnies
                 else if (grenadeThrown)
                 {
                     //  Bounce that mofo 
-                    //TODO - update direction in accordance to the terrain that the grenade hits, rather than just reverting the direction of travel
-                    //TODO - decrease travel velocity after a bounce
-
-                    // Find terrainContour[] for where projectile meets terrain
-                    // Take previous terrainContour[] X,Y
-                    // Take next terrainContour[] X,Y
-                    // create a vector2 with those positions and normalise
-                    var point1 = new Vector2(terrainContour[(int)terrainCollisionPoint.X] -1, terrainContour[(int)terrainCollisionPoint.Y] -1);
-                    var point2 = new Vector2(terrainContour[(int)terrainCollisionPoint.X] +1, terrainContour[(int)terrainCollisionPoint.Y ] +1);
-
-                    var cross = (point1.X * point2.Y) - (point1.Y * point2.X);
-                    
-                    Console.WriteLine(cross);
-
-
-
-                    // Take previous projectile's X,Y
-                    // Use current projectile's X,Y to work out Vector2 holding trajectory
-                    // new Vector2[normalisation, trajectory];
-
-                    /*
-                    if (timer <= 0)
+                    if(timer <= 0)
                     {
-                        projectileAngle = -projectileAngle;
-                        
-                        timer = 1;
+                        var terrain = new Vector2(terrainContour[(int) terrainCollisionPoint.Y] - 1,
+                            terrainContour[(int) terrainCollisionPoint.Y] + 1);
+                        terrain.Normalize();
+                        var reflection = Vector2.Reflect(projectileDirection, terrain);
+                        projectileDirection = -reflection;
+                        timer = 0.5f;
                     }
-                    */
-
-                    /*
-                    if (terrainCollisionPoint.X > projectilePosition.X)
-                    {
-                        projectileDirection.X *= -1;
-                    }
-
-                    if (terrainCollisionPoint.X < projectileDirection.Y)
-                    {
-                        projectileDirection.X *= 1;
-                    }
-
-
-                    if (terrainCollisionPoint.Y > projectilePosition.Y)
-                    {
-                        projectileDirection.Y *= -1;
-                    }
-
-                    if (terrainCollisionPoint.Y < projectilePosition.Y)
-                    {
-                        projectileDirection.Y *= 1;
-                    }
-
-
-                    if (players[currentPlayer].Power < 0)
-                    {
-                        players[currentPlayer].Power = 0;
-                    }
-                    */
                 }
             }
 
