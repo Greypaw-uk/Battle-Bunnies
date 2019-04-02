@@ -31,13 +31,18 @@ namespace BattleBunnies
         //  THROTTLE SHOTS
         public static bool canShoot;
 
+
         //  SCREEN SETUP
+        public static GraphicsDeviceManager graphics;
+        public static GraphicsDevice device;
+
         public static int screenWidth;
         public static int screenHeight;
 
         public static int PreferredBackBufferWidth;
         public static int PreferredBackBufferHeight;
         public static bool IsFullScreen;
+
 
         //  GUI 
         public static Texture2D splashScreen;
@@ -49,6 +54,7 @@ namespace BattleBunnies
         public static Color myTransparentColor = new Color(0, 0, 0, 127);
 
         public static SpriteFont font;
+
 
         //  GAME TEXTURES
         public static Texture2D backgroundTexture;
@@ -68,6 +74,7 @@ namespace BattleBunnies
         public static Texture2D launcherIcon;
         public static Texture2D grenadeIcon;
 
+
         //  SOUND EFFECTS
         public static SoundEffect hitbunny;
 
@@ -76,10 +83,6 @@ namespace BattleBunnies
 
         public static Song titleTheme;
 
-        //  SCREEN SETUP
-        public static GraphicsDeviceManager graphics;
-
-        public static GraphicsDevice device;
 
         //  Weapon Variables
         public static bool rocketFlying = false;
@@ -101,12 +104,14 @@ namespace BattleBunnies
         public static Color[,] explosionColourArray;
         public static Color[,] grenadeColourArray;
 
+
         //  Misc
         public static List<Vector2> smokeList = new List<Vector2>();
 
         public static Random randomiser = new Random();
         public static int[] terrainContour;
         public static List<ParticleData> particleList = new List<ParticleData>();
+
 
         //  GAME TIMER
         public static float timer = 0;

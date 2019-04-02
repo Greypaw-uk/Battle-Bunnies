@@ -41,7 +41,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Game1.cs" />
+    <Compile Include="Engine.cs" />
+    <Compile Include="Main.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="Graphics.cs" />
     <Compile Include="Keymapping.cs" />

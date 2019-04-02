@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using static BattleBunnies.Global;
 using static BattleBunnies.Players;
+using static BattleBunnies.Engine;
 
 namespace BattleBunnies
 {
@@ -57,8 +58,7 @@ namespace BattleBunnies
                         && lastMouseState.LeftButton.Equals(ButtonState.Pressed)
                         && timer <= 0)
                     {
-                        Game1 g = new Game1();
-                        g.FireWeapon();
+                        FireWeapon();
                     }
                     break;
 
