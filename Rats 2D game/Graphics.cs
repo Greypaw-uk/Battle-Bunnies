@@ -5,6 +5,8 @@ using System;
 using static BattleBunnies.Global;
 using static BattleBunnies.Players;
 using static BattleBunnies.Keymapping;
+using static BattleBunnies.Engine;
+using static BattleBunnies.Music;
 
 namespace BattleBunnies
 {
@@ -40,6 +42,8 @@ namespace BattleBunnies
 
         public static void DrawTitleScreen()
         {
+            musicPlaying = true;
+
             var _startX = screenWidth / 2;
             var _startY = screenHeight / 2;
 

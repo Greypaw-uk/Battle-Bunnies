@@ -152,12 +152,6 @@
 /processorParam:TextureFormat=Color
 /build:start.png
 
-#begin titleTheme.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:titleTheme.wav
-
 #begin launcherIcon.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -247,4 +241,16 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:rabbitDeath.wav
+
+#begin titleTheme.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:titleTheme.mp3
+
+#begin ukulele.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:ukulele.mp3
 

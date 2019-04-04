@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,14 +10,6 @@ namespace BattleBunnies
 {
     public static class Global
     {
-        public enum EquippedWeapon
-        {
-            NoWeapon,
-            RocketLauncher,
-            Grenade
-        }
-        public static EquippedWeapon equippedWeapon;
-
         public enum GameState
         {
             SplashScreen,
@@ -27,9 +20,6 @@ namespace BattleBunnies
         }
 
         public static GameState gameState;
-
-        //  THROTTLE SHOTS
-        public static bool canShoot;
 
 
         //  SCREEN SETUP
@@ -58,7 +48,6 @@ namespace BattleBunnies
 
         //  GAME TEXTURES
         public static Texture2D backgroundTexture;
-
         public static Texture2D foregroundTexture;
 
         public static Texture2D bunnyTexture;
@@ -82,17 +71,7 @@ namespace BattleBunnies
         public static SoundEffect launch;
 
         public static Song titleTheme;
-
-
-        //  Weapon Variables
-        public static bool rocketFlying = false;
-
-        public static bool grenadeThrown = false;
-
-        public static Vector2 projectilePosition;
-        public static Vector2 projectileDirection;
-        public static float projectileAngle;
-        public static float projectileScaling = 0.1f;
+        public static Song ukulele;
 
 
         //  Colour Arrays
@@ -115,7 +94,6 @@ namespace BattleBunnies
 
         //  GAME TIMER
         public static float timer = 0;
-
         public static float TIMER = 0;
     }
 }

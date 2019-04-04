@@ -8,6 +8,7 @@ using static BattleBunnies.Global;
 using static BattleBunnies.Graphics;
 using static BattleBunnies.Keymapping;
 using static BattleBunnies.Players;
+using static BattleBunnies.Music;
 
 namespace BattleBunnies
 {
@@ -38,11 +39,14 @@ namespace BattleBunnies
             gameState = GameState.SplashScreen;
             equippedWeapon = EquippedWeapon.NoWeapon;
 
+
+            //  SCREEN SETUP
             PreferredBackBufferWidth = 800;
             PreferredBackBufferHeight = 600;
             IsFullScreen = false;
             graphics.ApplyChanges();
             Window.Title = "Battle Bunnies";
+
 
             base.Initialize();
         }
@@ -95,7 +99,9 @@ namespace BattleBunnies
             explosionColourArray = TextureTo2DArray(explosionTexture);
 
             // Sounds
-            //titleTheme = Content.Load<Song>("titleTheme");
+            titleTheme = Content.Load<Song>("titleTheme");
+            ukulele = Content.Load<Song>("ukulele");
+
             hitbunny = Content.Load<SoundEffect>("rabbitDeath");
             hitTerrain = Content.Load<SoundEffect>("hitterrain");
             launch = Content.Load<SoundEffect>("launch");
@@ -109,14 +115,15 @@ namespace BattleBunnies
         {
             //  MOUSE CONTROLS
             ProcessMouse();
-            ProcessKeyboard();
 
-            // Store last state for comparrison
+                // Store last state for comparrison
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
 
             // KEYBOARD CONTROLS
-            // Store last state for comparrison
+            ProcessKeyboard();
+
+                // Store last state for comparrison
             lastKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
 
@@ -148,11 +155,9 @@ namespace BattleBunnies
             if (particleList.Count > 0)
                 UpdateParticles(gameTime);
 
-            //  GAME MUSIC
-            if (gameState.Equals(GameState.SplashScreen) || gameState.Equals(GameState.TitleScreen))
-                MediaPlayer.Play(titleTheme);
-            else
-                MediaPlayer.Stop();
+            //  MUSIC
+            PlayMusic();
+           
 
             //  FINISHED UPDATE CYCLE
             base.Update(gameTime);

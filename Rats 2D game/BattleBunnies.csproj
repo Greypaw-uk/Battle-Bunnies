@@ -46,6 +46,7 @@
     <Compile Include="Global.cs" />
     <Compile Include="Graphics.cs" />
     <Compile Include="Keymapping.cs" />
+    <Compile Include="Music.cs" />
     <Compile Include="Players.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

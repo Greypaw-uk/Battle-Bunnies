@@ -4,6 +4,7 @@ using System;
 using static BattleBunnies.Global;
 using static BattleBunnies.Players;
 using static BattleBunnies.Engine;
+using static BattleBunnies.Music;
 
 namespace BattleBunnies
 {
@@ -100,6 +101,19 @@ namespace BattleBunnies
                         }
                     }
 
+                    if (keyboardState.IsKeyDown(Keys.LeftControl) 
+                        && keyboardState.IsKeyDown(Keys.M))
+                    {
+                        if (!musicPlaying)
+                        {
+                            musicPlaying = true;
+                        }
+                        else
+                        {
+                            musicPlaying = false;
+                        }
+
+                    }
                     break;
 
                 case GameState.WeaponMenu:

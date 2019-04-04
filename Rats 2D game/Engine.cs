@@ -8,8 +8,31 @@ using static BattleBunnies.Players;
 namespace BattleBunnies
 
 {
+    public enum EquippedWeapon
+    {
+        NoWeapon,
+        RocketLauncher,
+        Grenade
+    }
+    
     static class Engine
     {
+        public static EquippedWeapon equippedWeapon;
+
+        //  Weapon Variables
+        public static bool rocketFlying = false;
+
+        public static bool grenadeThrown = false;
+
+        public static Vector2 projectilePosition;
+        public static Vector2 projectileDirection;
+        public static float projectileAngle;
+        public static float projectileScaling = 0.1f;
+
+        //  THROTTLE SHOTS
+        public static bool canShoot;
+
+
         //      #################################################
         //      #                                               #
         //      #               GAME LOGIC                      #
