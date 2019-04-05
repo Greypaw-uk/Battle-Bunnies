@@ -47,7 +47,6 @@ namespace BattleBunnies
             graphics.ApplyChanges();
             Window.Title = "Battle Bunnies";
 
-
             base.Initialize();
         }
 

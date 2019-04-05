@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework.Media;
+﻿using System;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Media;
 using static BattleBunnies.Global;
 
 namespace BattleBunnies
@@ -16,13 +18,13 @@ namespace BattleBunnies
                     case GameState.TitleScreen:
                     {
                         MediaPlayer.Stop();
-                        MediaPlayer.Play(titleTheme);
+                        MediaPlayer.Play(ukulele);
                     }
                         break;
                     case GameState.Playing:
                     {
                         MediaPlayer.Stop();
-                        MediaPlayer.Play(ukulele);
+                        MediaPlayer.Play(titleTheme);
                     }
                         break;
                 }

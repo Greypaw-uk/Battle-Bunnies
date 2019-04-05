@@ -20,9 +20,9 @@ namespace BattleBunnies
         public static EquippedWeapon equippedWeapon;
 
         //  Weapon Variables
-        public static bool rocketFlying = false;
+        public static bool rocketFlying;
 
-        public static bool grenadeThrown = false;
+        public static bool grenadeThrown;
 
         public static Vector2 projectilePosition;
         public static Vector2 projectileDirection;

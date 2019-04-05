@@ -102,7 +102,9 @@ namespace BattleBunnies
                     }
 
                     if (keyboardState.IsKeyDown(Keys.LeftControl) 
-                        && keyboardState.IsKeyDown(Keys.M))
+                        && keyboardState.IsKeyDown(Keys.M)
+                        && lastKeyboardState.IsKeyUp(Keys.LeftControl)
+                        || lastKeyboardState.IsKeyUp(Keys.M))
                     {
                         if (!musicPlaying)
                         {
@@ -112,7 +114,6 @@ namespace BattleBunnies
                         {
                             musicPlaying = false;
                         }
-
                     }
                     break;
 
