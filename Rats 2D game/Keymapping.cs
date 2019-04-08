@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
+
 using static BattleBunnies.Global;
 using static BattleBunnies.Players;
 using static BattleBunnies.Engine;
 using static BattleBunnies.Music;
+
+using static BattleBunnies.Weapons.RocketLauncher;
+using static BattleBunnies.Weapons.Grenade;
 
 namespace BattleBunnies
 {

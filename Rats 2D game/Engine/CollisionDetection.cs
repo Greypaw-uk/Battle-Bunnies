@@ -1,163 +1,24 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using static BattleBunnies.Global;
-using static BattleBunnies.Graphics;
+
+using static BattleBunnies.Engine;
 using static BattleBunnies.Players;
+using static BattleBunnies.Graphics;
+using static BattleBunnies.Global;
+
+using static BattleBunnies.Weapons.RocketLauncher;
+using static BattleBunnies.Weapons.Grenade;
+
 
 namespace BattleBunnies
-
 {
-    public enum EquippedWeapon
+    public static class CollisionDetection
     {
-        NoWeapon,
-        RocketLauncher,
-        Grenade
-    }
-    
-    static class Engine
-    {
-        public static EquippedWeapon equippedWeapon;
-
-        //  Weapon Variables
-        public static bool rocketFlying;
-
-        public static bool grenadeThrown;
-
-        public static Vector2 projectilePosition;
-        public static Vector2 projectileDirection;
-        public static float projectileAngle;
-        public static float projectileScaling = 0.1f;
-
-        //  THROTTLE SHOTS
-        public static bool canShoot;
-
-
-        //      #################################################
-        //      #                                               #
-        //      #               GAME LOGIC                      #
-        //      #                                               #
-        //      #################################################
-
-
-        public static void FireWeapon()
-        {
-            if (canShoot)
-            {
-                canShoot = false;
-                switch (equippedWeapon)
-                {
-                    case EquippedWeapon.NoWeapon:
-
-                        break;
-
-                    case EquippedWeapon.RocketLauncher:
-                        {
-                            rocketFlying = true;
-                            launch.Play();
-
-                            projectilePosition = players[currentPlayer].Position;
-                            projectilePosition.X += 20;
-                            projectilePosition.Y -= 10;
-                            projectileAngle = players[currentPlayer].Angle;
-                            Vector2 up = new Vector2(0, -1);
-                            Matrix rotMatrix = Matrix.CreateRotationZ(projectileAngle);
-                            projectileDirection = Vector2.Transform(up, rotMatrix);
-                            projectileDirection *= players[currentPlayer].Power / 50.0f;
-                        }
-                        break;
-
-                    case EquippedWeapon.Grenade:
-                        {
-                            grenadeThrown = true;
-
-                            projectilePosition = players[currentPlayer].Position;
-                            projectilePosition.X += 20;
-                            projectilePosition.Y -= 10;
-                            projectileAngle = players[currentPlayer].Angle;
-                            Vector2 grenadeGrav = new Vector2(0, -1);
-                            Matrix grenadeSpin = Matrix.CreateRotationZ(projectileAngle);
-                            projectileDirection = Vector2.Transform(grenadeGrav, grenadeSpin);
-                            projectileDirection *= players[currentPlayer].Power / 50.0f;
-                        }
-                        break;
-                }
-            }
-        }
-
-        public static void UpdateRocket()
-        {
-            if (rocketFlying)
-            {
-                Vector2 gravity = new Vector2(0, 1);
-                projectileDirection += gravity / 10.0f;
-                projectilePosition += projectileDirection;
-                projectileAngle = (float)Math.Atan2(projectileDirection.X, -projectileDirection.Y);
-
-                for (int i = 0; i < 5; i++)
-                {
-                    Vector2 smokePos = projectilePosition;
-                    smokePos.X += randomiser.Next(10) - 5;
-                    smokePos.Y += randomiser.Next(10) - 5;
-                    smokeList.Add(smokePos);
-                }
-            }
-        }
-
-        public static void UpdateGrenade(GameTime gameTime)
-        {
-            if (grenadeThrown)
-            {
-                if (players[currentPlayer].weaponFuse <= 0)
-                {
-                    smokeList = new List<Vector2>();
-
-                    AddExplosion(projectilePosition, 10, 80.0f, 2000.0f, gameTime);
-                    hitTerrain.Play();
-
-                    grenadeThrown = false;
-
-                    NextPlayer();
-                }
-                Vector2 gravity = new Vector2(0, 1);
-                projectileDirection += gravity / 10.0f;
-                projectilePosition += projectileDirection;
-                projectileAngle = (float)Math.Atan2(projectileDirection.X, -projectileDirection.Y);
-            }
-        }
-
-        public static bool CheckOutOfScreen()
-        {
-            bool projectileOutOfScreen = projectilePosition.Y > screenHeight;
-            projectileOutOfScreen |= projectilePosition.X < 0;
-            projectileOutOfScreen |= projectilePosition.X > screenWidth;
-
-            return projectileOutOfScreen;
-        }
-
-        public static void NextPlayer()
-        {
-            currentPlayer = currentPlayer + 1;
-            currentPlayer = currentPlayer % numberOfPlayers;
-            while (!players[currentPlayer].IsAlive)
-            {
-                currentPlayer = ++currentPlayer % numberOfPlayers;
-            }
-            players[currentPlayer].weaponFuse = 5.0f;
-            players[currentPlayer].Angle = 0;
-            players[currentPlayer].Power = 0;
-            equippedWeapon = EquippedWeapon.NoWeapon;
-            canShoot = false;
-        }
-
-
-        //      #################################################
-        //      #                                               #
-        //      #               COLLSION DETECTION              #
-        //      #                                               #
-        //      #################################################
-
-
+        //      Takes two images and takes the X,Y location of each pixel in both images
+        //      Checks whether pixels from image 1 intercept those of image 2
+        //      If no collision, returns -1,-1
         public static Vector2 TexturesCollide(Color[,] tex1, Matrix mat1, Color[,] tex2, Matrix mat2)
         {
             Matrix mat1to2 = mat1 * Matrix.Invert(mat2);
@@ -194,6 +55,22 @@ namespace BattleBunnies
             return new Vector2(-1, -1);
         }
 
+        public static Color[,] TextureTo2DArray(Texture2D texture)
+        {
+            Color[] colors1D = new Color[texture.Width * texture.Height];
+            texture.GetData(colors1D);
+
+            Color[,] colors2D = new Color[texture.Width, texture.Height];
+            for (int x = 0; x < texture.Width; x++)
+            {
+                for (int y = 0; y < texture.Height; y++)
+                {
+                    colors2D[x, y] = colors1D[x + y * texture.Width];
+                }
+            }
+            return colors2D;
+        }
+
         public static Vector2 CheckTerrainCollision()
         {
             Matrix projectileMat = Matrix.CreateTranslation(-42, -240, 0)
@@ -202,8 +79,21 @@ namespace BattleBunnies
                 * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
 
             Matrix terrainMat = Matrix.Identity;
-            Vector2 terrainCollisionPoint =
-                TexturesCollide(rocketColourArray, projectileMat, foregroundColourArray, terrainMat);
+
+            Vector2 terrainCollisionPoint = new Vector2();
+
+            if (equippedWeapon.Equals(EquippedWeapon.RocketLauncher))
+            {
+                terrainCollisionPoint =
+                    TexturesCollide(rocketColourArray, projectileMat, foregroundColourArray, terrainMat);
+                //return terrainCollisionPoint;
+            }
+            else if (equippedWeapon.Equals(EquippedWeapon.Grenade))
+            {
+                terrainCollisionPoint =
+                    TexturesCollide(grenadeColourArray, projectileMat, foregroundColourArray, terrainMat);
+                //return terrainCollisionPoint;
+            }
             return terrainCollisionPoint;
         }
 
@@ -299,8 +189,8 @@ namespace BattleBunnies
                     //  Bounce that mofo 
                     if (timer <= 0)
                     {
-                        var terrain = new Vector2(terrainContour[(int)terrainCollisionPoint.Y] - 1,
-                            terrainContour[(int)terrainCollisionPoint.Y] + 1);
+                        var terrain = new Vector2(1, Math.Abs(terrainContour[(int)terrainCollisionPoint.Y + 1]
+                            - terrainContour[(int)terrainCollisionPoint.Y - 1]));
                         terrain.Normalize();
                         var reflection = Vector2.Reflect(projectileDirection, terrain);
                         projectileDirection = -reflection;

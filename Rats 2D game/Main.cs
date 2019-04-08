@@ -1,14 +1,21 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BattleBunnies.Weapons;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+
+using static BattleBunnies.CollisionDetection;
 using static BattleBunnies.Engine;
 using static BattleBunnies.Global;
 using static BattleBunnies.Graphics;
 using static BattleBunnies.Keymapping;
 using static BattleBunnies.Players;
 using static BattleBunnies.Music;
+using static BattleBunnies.Terrain;
+
+using static BattleBunnies.Weapons.RocketLauncher;
+using static BattleBunnies.Weapons.Grenade;
 
 namespace BattleBunnies
 {
@@ -128,7 +135,7 @@ namespace BattleBunnies
 
             //  WEAPON LOGIC
 
-            if (rocketFlying)
+            if (RocketLauncher.rocketFlying)
             {
                 UpdateRocket();
                 CheckCollisions(gameTime);
