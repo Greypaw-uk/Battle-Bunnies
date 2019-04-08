@@ -28,7 +28,8 @@ namespace BattleBunnies
             switch (gameState)
             {
                 case GameState.SplashScreen:
-                    if (mouseState.LeftButton.Equals(ButtonState.Pressed) && (lastMouseState.LeftButton.Equals(ButtonState.Pressed)))
+                    if (mouseState.LeftButton.Equals(ButtonState.Pressed) 
+                        & (lastMouseState.LeftButton.Equals(ButtonState.Pressed)))
                     {
                         gameState = GameState.TitleScreen;
                     }
@@ -41,15 +42,15 @@ namespace BattleBunnies
                     players[currentPlayer].Angle = -(float)Math.Atan2(dPos.X, dPos.Y);
 
                     // WEAPON MENU ON RIGHT CLICK
-                    if (mouseState.RightButton.Equals(ButtonState.Released) &&
-                        lastMouseState.RightButton.Equals(ButtonState.Pressed))
+                    if (mouseState.RightButton.Equals(ButtonState.Released) 
+                        & lastMouseState.RightButton.Equals(ButtonState.Pressed))
                     {
                         gameState = GameState.WeaponMenu;
                     }
 
                     // SHOOTING
                     if (mouseState.LeftButton.Equals(ButtonState.Pressed)
-                        && equippedWeapon != EquippedWeapon.NoWeapon)
+                        & equippedWeapon != EquippedWeapon.NoWeapon)
                     {
                         players[currentPlayer].Power += 5;
                         if (players[currentPlayer].Power > 500)
@@ -60,8 +61,8 @@ namespace BattleBunnies
                     }
 
                     if (mouseState.LeftButton.Equals(ButtonState.Released)
-                        && lastMouseState.LeftButton.Equals(ButtonState.Pressed)
-                        && timer <= 0)
+                        & lastMouseState.LeftButton.Equals(ButtonState.Pressed)
+                        & timer <= 0)
                     {
                         FireWeapon();
                     }
@@ -70,7 +71,7 @@ namespace BattleBunnies
                 case GameState.WeaponMenu:
                     {
                         if (mouseState.RightButton.Equals(ButtonState.Released)
-                                && lastMouseState.RightButton.Equals(ButtonState.Pressed))
+                            & lastMouseState.RightButton.Equals(ButtonState.Pressed))
                         {
                             gameState = GameState.Playing;
                         }
@@ -92,8 +93,8 @@ namespace BattleBunnies
                     }
 
                     if (keyboardState.IsKeyDown(Keys.F)
-                        && lastKeyboardState.IsKeyUp(Keys.F)
-                        && !grenadeThrown)
+                        & lastKeyboardState.IsKeyUp(Keys.F)
+                        & !grenadeThrown)
                     {
                         if (players[currentPlayer].weaponFuse >= 5.0f)
                         {
@@ -106,8 +107,8 @@ namespace BattleBunnies
                     }
 
                     if (keyboardState.IsKeyDown(Keys.LeftControl) 
-                        && keyboardState.IsKeyDown(Keys.M)
-                        && lastKeyboardState.IsKeyUp(Keys.LeftControl)
+                        & keyboardState.IsKeyDown(Keys.M)
+                        & lastKeyboardState.IsKeyUp(Keys.LeftControl)
                         || lastKeyboardState.IsKeyUp(Keys.M))
                     {
                         if (!musicPlaying)

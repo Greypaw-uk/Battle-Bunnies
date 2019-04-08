@@ -46,10 +46,10 @@
     <Compile Include="Engine\Terrain.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Global.cs" />
-    <Compile Include="Graphics.cs" />
+    <Compile Include="Engine\Graphics.cs" />
     <Compile Include="Keymapping.cs" />
-    <Compile Include="Music.cs" />
-    <Compile Include="Players.cs" />
+    <Compile Include="Engine\Music.cs" />
+    <Compile Include="Engine\Players.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Weapons\Grenade.cs" />

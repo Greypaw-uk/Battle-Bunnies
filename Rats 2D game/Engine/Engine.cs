@@ -30,13 +30,6 @@ namespace BattleBunnies
         public static bool canShoot;
 
 
-        //      #################################################
-        //      #                                               #
-        //      #               GAME LOGIC                      #
-        //      #                                               #
-        //      #################################################
-
-
         public static void FireWeapon()
         {
             if (canShoot)

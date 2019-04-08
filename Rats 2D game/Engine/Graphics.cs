@@ -56,12 +56,12 @@ namespace BattleBunnies
 
             // Clicking Start button
             if (mouseState.X > startRectangle.X
-                && mouseState.X < startRectangle.X + startRectangle.Width
-                && mouseState.Y > startRectangle.Y
-                && mouseState.Y < startRectangle.Y + startRectangle.Height)
+                & mouseState.X < startRectangle.X + startRectangle.Width
+                & mouseState.Y > startRectangle.Y
+                & mouseState.Y < startRectangle.Y + startRectangle.Height)
             {
-                if (mouseState.LeftButton.Equals(ButtonState.Pressed) &&
-                    lastMouseState.LeftButton.Equals(ButtonState.Released))
+                if (mouseState.LeftButton.Equals(ButtonState.Pressed) 
+                    & lastMouseState.LeftButton.Equals(ButtonState.Released))
                 {
                     gameState = GameState.Playing;
                 }
@@ -79,12 +79,12 @@ namespace BattleBunnies
             spriteBatch.Draw(launcherIcon, rocketRectangle, Color.White);
 
             if (mouseState.X > rocketRectangle.X
-                && mouseState.X < rocketRectangle.X + launcherIcon.Width
-                && mouseState.Y > rocketRectangle.Y
-                && mouseState.Y < rocketRectangle.Y + launcherIcon.Height)
+                & mouseState.X < rocketRectangle.X + launcherIcon.Width
+                & mouseState.Y > rocketRectangle.Y
+                & mouseState.Y < rocketRectangle.Y + launcherIcon.Height)
             {
-                if (mouseState.LeftButton.Equals(ButtonState.Pressed) &&
-                    lastMouseState.LeftButton.Equals(ButtonState.Released))
+                if (mouseState.LeftButton.Equals(ButtonState.Pressed) 
+                    & lastMouseState.LeftButton.Equals(ButtonState.Released))
                 {
                     equippedWeapon = EquippedWeapon.RocketLauncher;
                     gameState = GameState.Playing;
@@ -97,12 +97,12 @@ namespace BattleBunnies
             spriteBatch.Draw(grenadeIcon, grenadeRectangle, Color.White);
 
             if (mouseState.X > grenadeRectangle.X
-                && mouseState.X < grenadeRectangle.X + grenadeIcon.Width
-                && mouseState.Y > grenadeRectangle.Y
-                && mouseState.Y < grenadeRectangle.Y + grenadeIcon.Height)
+                & mouseState.X < grenadeRectangle.X + grenadeIcon.Width
+                & mouseState.Y > grenadeRectangle.Y
+                & mouseState.Y < grenadeRectangle.Y + grenadeIcon.Height)
             {
-                if (mouseState.LeftButton.Equals(ButtonState.Pressed) &&
-                    lastMouseState.LeftButton.Equals(ButtonState.Released))
+                if (mouseState.LeftButton.Equals(ButtonState.Pressed) 
+                    & lastMouseState.LeftButton.Equals(ButtonState.Released))
                 {
                     equippedWeapon = EquippedWeapon.Grenade;
                     gameState = GameState.Playing;
