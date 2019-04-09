@@ -99,6 +99,8 @@ namespace BattleBunnies
             playerScaling = 40.0f / launcherTexture.Width;
 
             rocketColourArray = TextureTo2DArray(rocketTexture);
+            grenadeColourArray = TextureTo2DArray(grenadeTexture);
+
             launcherColourArray = TextureTo2DArray(launcherTexture);
             bunnyColourArray = TextureTo2DArray(bunnyTexture);
 

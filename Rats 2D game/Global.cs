@@ -75,12 +75,12 @@ namespace BattleBunnies
 
         //  Colour Arrays
         public static Color[,] rocketColourArray;
+        public static Color[,] grenadeColourArray;
 
         public static Color[,] foregroundColourArray;
         public static Color[,] launcherColourArray;
         public static Color[,] bunnyColourArray;
         public static Color[,] explosionColourArray;
-        public static Color[,] grenadeColourArray;
 
 
         //  Misc

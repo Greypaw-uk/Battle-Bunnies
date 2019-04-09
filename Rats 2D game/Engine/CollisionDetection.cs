@@ -82,24 +82,22 @@ namespace BattleBunnies
 
             Vector2 terrainCollisionPoint = new Vector2();
 
-            if (equippedWeapon.Equals(EquippedWeapon.RocketLauncher))
+            if (rocketFlying)
             {
                 terrainCollisionPoint =
                     TexturesCollide(rocketColourArray, projectileMat, foregroundColourArray, terrainMat);
-                //return terrainCollisionPoint;
             }
-            else if (equippedWeapon.Equals(EquippedWeapon.Grenade))
+            else if (grenadeThrown)
             {
                 terrainCollisionPoint =
                     TexturesCollide(grenadeColourArray, projectileMat, foregroundColourArray, terrainMat);
-                //return terrainCollisionPoint;
             }
             return terrainCollisionPoint;
         }
 
         public static Vector2 CheckPlayersCollision()
         {
-            Matrix rocketMat = Matrix.CreateTranslation(-42, -240, 0)
+            Matrix projectileMat = Matrix.CreateTranslation(-42, -240, 0)
                 * Matrix.CreateRotationZ(projectileAngle)
                 * Matrix.CreateScale(projectileScaling)
                 * Matrix.CreateTranslation(projectilePosition.X, projectilePosition.Y, 0);
@@ -114,11 +112,28 @@ namespace BattleBunnies
                         int xPos = (int)player.Position.X;
                         int yPos = (int)player.Position.Y;
 
-                        Matrix launcherMat = Matrix.CreateTranslation(0, -launcherTexture.Height, 0)
-                            * Matrix.CreateScale(playerScaling)
-                            * Matrix.CreateTranslation(xPos, yPos, 0);
+                        Vector2 launcherCollisionPoint = new Vector2();
+                        
+                        if (rocketFlying)
+                        {
+                            Matrix launcherMat = Matrix.CreateTranslation(0, -launcherTexture.Height, 0)
+                                                 * Matrix.CreateScale(playerScaling)
+                                                 * Matrix.CreateTranslation(xPos, yPos, 0);
 
-                        Vector2 launcherCollisionPoint = TexturesCollide(launcherColourArray, launcherMat, rocketColourArray, rocketMat);
+                            launcherCollisionPoint = TexturesCollide(launcherColourArray, launcherMat,
+                                rocketColourArray, projectileMat);
+                        }
+
+                        if (grenadeThrown)
+                        {
+                            Matrix launcherMat = Matrix.CreateTranslation(0, -grenadeTexture.Height, 0)
+                                                 * Matrix.CreateScale(playerScaling)
+                                                 * Matrix.CreateTranslation(xPos, yPos, 0);
+
+                            launcherCollisionPoint = TexturesCollide(launcherColourArray, launcherMat,
+                                grenadeColourArray, projectileMat);
+                        }
+
 
                         if (launcherCollisionPoint.X > -1)
                         {
@@ -131,7 +146,16 @@ namespace BattleBunnies
                             * Matrix.CreateScale(playerScaling)
                             * Matrix.CreateTranslation(xPos + 20, yPos - 10, 0);
 
-                        Vector2 bunnyCollisionPoint = TexturesCollide(bunnyColourArray, bunnyMat, rocketColourArray, rocketMat);
+                        Vector2 bunnyCollisionPoint = new Vector2();
+                        if (rocketFlying)
+                        {
+                            bunnyCollisionPoint = TexturesCollide(bunnyColourArray, bunnyMat, rocketColourArray, projectileMat);
+                        }
+                        if (grenadeThrown)
+                        {
+                            bunnyCollisionPoint = TexturesCollide(bunnyColourArray, bunnyMat, grenadeColourArray, projectileMat);
+                        }
+
                         if (bunnyCollisionPoint.X > -1)
                         {
                             players[i].IsAlive = false;
@@ -189,6 +213,9 @@ namespace BattleBunnies
                     //  Bounce that mofo 
                     if (timer <= 0)
                     {
+                        //  Due to procedurally generated terrain - need to draw a line roughly in line with terrain to bounce 'nades
+                        //  Draws an imaginary line by taking the Y position of the two X positions adjacent to collision point
+                        //  Use this line to calculate reflection of the grenade
                         var terrain = new Vector2(1, Math.Abs(terrainContour[(int)terrainCollisionPoint.Y + 1]
                             - terrainContour[(int)terrainCollisionPoint.Y - 1]));
                         terrain.Normalize();
