@@ -111,15 +111,34 @@ namespace BattleBunnies
             }
         }
 
+        /*
+         *  Text display in top/left of screen
+         */
         public static void DrawText()
         {
             PlayerData player = players[currentPlayer];
             int currentAngle = (int) MathHelper.ToDegrees(player.Angle);
             spriteBatch.DrawString(font, "Shot angle: " + currentAngle, new Vector2(20, 20), player.Colour);
             spriteBatch.DrawString(font, "Shot power: " + player.Power, new Vector2(20, 45), player.Colour);
-            spriteBatch.DrawString(font, "Fuse Timer: " + player.weaponFuse, new Vector2(20, 60), player.Colour);
+            spriteBatch.DrawString(font, "Fuse Timer: " + (int)player.weaponFuse, new Vector2(20, 60), player.Colour);
         }
 
+        /*
+         *  Display health values above bunny's head
+         */
+        public static void DisplayPlayerHealth()
+        {
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                if (players[i].IsAlive)
+                {
+                    var healthX = players[i].Position.X + (bunnyTexture.Width / 2);
+                    var healthY = players[i].Position.Y + (bunnyTexture.Height + 30);
+
+                    spriteBatch.DrawString(font, players[i].Health.ToString(), new Vector2(healthX, healthY), players[i].Colour);
+                }
+            }
+        }
 
         //      #################################################
         //      #                                               #
@@ -172,12 +191,15 @@ namespace BattleBunnies
             }
         }
 
-
+        /*
+         * Smoke for weapon trails 
+        */
         public static void DrawSmoke()
         {
             foreach (Vector2 smokePos in smokeList)
             {
-                spriteBatch.Draw(smokeTexture, smokePos, null, Color.White, 0, new Vector2(40, 35), 0.2f,
+                // TODO Change to Colour.White if hotpink doesn't work out
+                spriteBatch.Draw(smokeTexture, smokePos, null, Color.HotPink, 0, new Vector2(40, 35), 0.2f,
                     SpriteEffects.None, 1);
             }
         }
@@ -187,13 +209,11 @@ namespace BattleBunnies
             for (int i = 0; i < particleList.Count; i++)
             {
                 ParticleData particle = particleList[i];
-                spriteBatch.Draw(explosionTexture, particle.Position, null, particle.ModColour, i,
+                spriteBatch.Draw(powTexture, particle.Position, null, particle.ModColour, i,
                     new Vector2(256, 256), particle.Scaling,
                     SpriteEffects.None, 1);
             }
         }
-
-
 
         public static void UpdateParticles(GameTime gameTime)
         {
@@ -223,7 +243,7 @@ namespace BattleBunnies
                     particleList[i] = particle;
                 }
             }
-        }
+        } 
 
         public static void AddExplosion(Vector2 explosionPos, int numberOfParticles, float size, float maxAge,
             GameTime gameTime)
@@ -248,6 +268,27 @@ namespace BattleBunnies
             FlattenTerrainBelowPlayers();
             CreateForeground();
         }
+
+        /*
+        public static void AddExplosion2(Vector2 explosionPos, int numberOfParticles, float size, float maxAge,
+            GameTime gameTime)
+        {
+            float rotation = (float)randomiser.Next(10);
+            Matrix mat = Matrix.CreateTranslation(-powTexture.Width / 2, -powTexture.Height / 2, 0) *
+                         Matrix.CreateRotationZ(rotation)
+                         * Matrix.CreateScale(size / (float)powTexture.Width * 2.0f) *
+                         Matrix.CreateTranslation(explosionPos.X, explosionPos.Y, 0);
+            AddCrater(powColourArray, mat);
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                players[i].Position.Y = terrainContour[(int)players[i].Position.X];
+            }
+
+            FlattenTerrainBelowPlayers();
+            CreateForeground();
+        }
+        */
 
         public static void AddExplosionParticle(Vector2 explosionPos, float explosionSize, float maxAge,
             GameTime gameTime)

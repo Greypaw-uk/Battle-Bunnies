@@ -68,7 +68,6 @@ namespace BattleBunnies
                 {
                     for (int x = 0; x < 40; x++)
                     {
-                        //TODO Fix here
                         terrainContour[(int)player.Position.X + x] = terrainContour[(int)player.Position.X];
                     }
                 }

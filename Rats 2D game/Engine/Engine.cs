@@ -69,6 +69,7 @@ namespace BattleBunnies
 
         public static void NextPlayer()
         {
+            // TODO Skip bunny's turn if they're dead
             currentPlayer = currentPlayer + 1;
             currentPlayer = currentPlayer % numberOfPlayers;
             while (!players[currentPlayer].IsAlive)

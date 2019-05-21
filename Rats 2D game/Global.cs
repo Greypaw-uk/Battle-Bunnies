@@ -20,7 +20,6 @@ namespace BattleBunnies
 
         public static GameState gameState;
 
-
         //  SCREEN SETUP
         public static GraphicsDeviceManager graphics;
         public static GraphicsDevice device;
@@ -54,6 +53,7 @@ namespace BattleBunnies
         public static Texture2D smokeTexture;
         public static Texture2D groundTexture;
         public static Texture2D explosionTexture;
+        public static Texture2D powTexture;
 
         public static Texture2D noWeaponTexture;
         public static Texture2D launcherTexture;
@@ -63,7 +63,18 @@ namespace BattleBunnies
         public static Texture2D grenadeIcon;
 
 
-        //  SOUND EFFECTS
+        //  COLOUR ARRAYS
+        public static Color[,] rocketColourArray;
+        public static Color[,] grenadeColourArray;
+
+        public static Color[,] foregroundColourArray;
+        public static Color[,] BunnyColourArray;
+        public static Color[,] bunnyColourArray;
+        public static Color[,] explosionColourArray;
+        public static Color[,] powColourArray;
+        
+        
+        //  AUDIO
         public static SoundEffect hitbunny;
 
         public static SoundEffect hitTerrain;
@@ -73,25 +84,17 @@ namespace BattleBunnies
         public static Song ukulele;
 
 
-        //  Colour Arrays
-        public static Color[,] rocketColourArray;
-        public static Color[,] grenadeColourArray;
-
-        public static Color[,] foregroundColourArray;
-        public static Color[,] launcherColourArray;
-        public static Color[,] bunnyColourArray;
-        public static Color[,] explosionColourArray;
-
-
-        //  Misc
+        //  MISC
         public static List<Vector2> smokeList = new List<Vector2>();
 
         public static Random randomiser = new Random();
         public static int[] terrainContour;
         public static List<ParticleData> particleList = new List<ParticleData>();
 
+        public static float weaponDamage = 0;
 
-        //  GAME TIMER
+
+        //  FUSE TIMERS
         public static float timer = 0;
         public static float TIMER = 0;
     }

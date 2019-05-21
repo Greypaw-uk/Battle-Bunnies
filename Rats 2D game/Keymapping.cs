@@ -14,7 +14,6 @@ namespace BattleBunnies
 {
     static class Keymapping
     {
-
         public static MouseState lastMouseState;
         public static MouseState mouseState;
 
@@ -96,31 +95,16 @@ namespace BattleBunnies
                         & lastKeyboardState.IsKeyUp(Keys.F)
                         & !grenadeThrown)
                     {
-                        if (players[currentPlayer].weaponFuse >= 5.0f)
-                        {
-                            players[currentPlayer].weaponFuse = 1.0f;
-                        }
-                        else
+                        if (players[currentPlayer].weaponFuse < 5.0f)
                         {
                             players[currentPlayer].weaponFuse++;
                         }
-                    }
-
-                    if (keyboardState.IsKeyDown(Keys.LeftControl) 
-                        & keyboardState.IsKeyDown(Keys.M)
-                        & lastKeyboardState.IsKeyUp(Keys.LeftControl)
-                        || lastKeyboardState.IsKeyUp(Keys.M))
-                    {
-                        if (!musicPlaying)
-                        {
-                            musicPlaying = true;
-                        }
                         else
                         {
-                            musicPlaying = false;
+                            players[currentPlayer].weaponFuse = 1.0f;
                         }
                     }
-                    break;
+                break;
 
                 case GameState.WeaponMenu:
                     if (keyboardState.IsKeyDown(Keys.Escape))
@@ -128,7 +112,7 @@ namespace BattleBunnies
                         equippedWeapon = EquippedWeapon.NoWeapon;
                         gameState = GameState.Playing;
                     }
-                    break;
+                break;
             }
         }
     }

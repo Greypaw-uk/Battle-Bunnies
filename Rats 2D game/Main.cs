@@ -17,6 +17,9 @@ using static BattleBunnies.Terrain;
 using static BattleBunnies.Weapons.RocketLauncher;
 using static BattleBunnies.Weapons.Grenade;
 
+// TODO Add reset button for testing
+// TODO Add method for winning a game based on remaining bunnies
+
 namespace BattleBunnies
 {
     public class Game1 : Game
@@ -81,6 +84,7 @@ namespace BattleBunnies
             smokeTexture = Content.Load<Texture2D>("smoke");
             groundTexture = Content.Load<Texture2D>("candySkulls");
             explosionTexture = Content.Load<Texture2D>("explosion");
+            powTexture = Content.Load<Texture2D>("pow");
 
             noWeaponTexture = Content.Load<Texture2D>("noWeapon");
             launcherTexture = Content.Load<Texture2D>("launcher");
@@ -101,10 +105,11 @@ namespace BattleBunnies
             rocketColourArray = TextureTo2DArray(rocketTexture);
             grenadeColourArray = TextureTo2DArray(grenadeTexture);
 
-            launcherColourArray = TextureTo2DArray(launcherTexture);
+            BunnyColourArray = TextureTo2DArray(launcherTexture);
             bunnyColourArray = TextureTo2DArray(bunnyTexture);
 
             explosionColourArray = TextureTo2DArray(explosionTexture);
+            powColourArray = TextureTo2DArray(powTexture);
 
             // Sounds
             titleTheme = Content.Load<Song>("titleTheme");
@@ -121,17 +126,49 @@ namespace BattleBunnies
 
         protected override void Update(GameTime gameTime)
         {
+            // WEAPON DAMAGE
+            switch (equippedWeapon)
+            {
+                case EquippedWeapon.NoWeapon:
+                {
+                    weaponDamage = 0;
+                    break;
+                }
+                case EquippedWeapon.RocketLauncher:
+                {
+                    weaponDamage = 50.0f;
+                    break;
+                }
+                case EquippedWeapon.Grenade:
+                {
+                    weaponDamage = 45.0f;
+                    break;
+                }
+            }
+
+            // BUNNY UPDATES
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                if (players[i].IsAlive && players[i].Health <= 0)
+                {
+                    players[i].IsAlive = false;
+                    hitbunny.Play();
+                    // TODO add some form of effect for a dead bunny - thinking a wreath appearing
+                    
+                }
+            }
+
             //  MOUSE CONTROLS
             ProcessMouse();
 
-                // Store last state for comparrison
+            // Store last state for comparrison
             lastMouseState = mouseState;
             mouseState = Mouse.GetState();
 
             // KEYBOARD CONTROLS
             ProcessKeyboard();
 
-                // Store last state for comparrison
+            // Store last state for comparrison
             lastKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
 
@@ -180,7 +217,7 @@ namespace BattleBunnies
                 case GameState.SplashScreen:
                 {
                     spriteBatch.Begin();
-                    DrawSplashScreen();
+                        DrawSplashScreen();
                     spriteBatch.End();
                     break;
                 }
@@ -188,7 +225,7 @@ namespace BattleBunnies
                 case GameState.TitleScreen:
                 {
                     spriteBatch.Begin();
-                    DrawTitleScreen();
+                        DrawTitleScreen();
                     spriteBatch.End();
                     break;
                 }
@@ -196,24 +233,26 @@ namespace BattleBunnies
                 case GameState.Playing:
                 {
                     spriteBatch.Begin();
-                    DrawScenery();
-                    DrawPlayers();
-                    DrawText();
-                    DrawRocket();
-                    DrawGrenade();
-                    DrawSmoke();
+                        DrawScenery();
+                        DrawPlayers();
+                        DrawText();
+                        DrawRocket();
+                        DrawGrenade();
+                        
+                        DisplayPlayerHealth();
                     spriteBatch.End();
 
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
-                    DrawExplosion();
-                    spriteBatch.End();
+                        DrawExplosion();
+                        DrawSmoke(); // TODO Move back to basic draw?
+                        spriteBatch.End();
                     break;
                 }
 
                 case GameState.WeaponMenu:
                 {
                     spriteBatch.Begin();
-                    DrawWeaponMenu();
+                        DrawWeaponMenu();
                     spriteBatch.End();
                     break;
                 }

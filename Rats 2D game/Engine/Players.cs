@@ -11,6 +11,7 @@ namespace BattleBunnies
         public float Angle;
         public float Power;
         public float weaponFuse;
+        public float Health;
     }
 
     public static class Players
@@ -54,6 +55,7 @@ namespace BattleBunnies
                 players[i].Position = new Vector2();
                 players[i].Position.X = screenWidth / (numberOfPlayers + 1) * (i + 1);
                 players[i].Position.Y = terrainContour[(int) players[i].Position.X];
+                players[i].Health = 100;
             }
         }
     }
