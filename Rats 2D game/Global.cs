@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -62,6 +63,7 @@ namespace BattleBunnies
         public static Texture2D launcherIcon;
         public static Texture2D grenadeIcon;
 
+        public static Texture2D currentTexture;
 
         //  COLOUR ARRAYS
         public static Color[,] rocketColourArray;

@@ -31,6 +31,8 @@ namespace BattleBunnies.Weapons
         {
             if (grenadeThrown)
             {
+                currentTexture = powTexture;
+
                 if (players[currentPlayer].weaponFuse <= 0)
                 {
                     smokeList = new List<Vector2>();

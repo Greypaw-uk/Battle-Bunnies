@@ -15,6 +15,8 @@ namespace BattleBunnies.Weapons
 
         public static void FireRocket()
         {
+            currentTexture = powTexture;
+
             rocketFlying = true;
             launch.Play();
 

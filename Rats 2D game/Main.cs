@@ -57,6 +57,8 @@ namespace BattleBunnies
             graphics.ApplyChanges();
             Window.Title = "Battle Bunnies";
 
+            currentTexture = powTexture;
+
             base.Initialize();
         }
 
@@ -243,7 +245,7 @@ namespace BattleBunnies
                     spriteBatch.End();
 
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
-                        DrawExplosion();
+                        DrawExplosion(currentTexture);
                         DrawSmoke(); // TODO Move back to basic draw?
                         spriteBatch.End();
                     break;

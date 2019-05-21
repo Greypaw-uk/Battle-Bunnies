@@ -204,12 +204,12 @@ namespace BattleBunnies
             }
         }
 
-        public static void DrawExplosion()
+        public static void DrawExplosion(Texture2D aTexture)
         {
             for (int i = 0; i < particleList.Count; i++)
             {
                 ParticleData particle = particleList[i];
-                spriteBatch.Draw(powTexture, particle.Position, null, particle.ModColour, i,
+                spriteBatch.Draw(aTexture, particle.Position, null, particle.ModColour, i,
                     new Vector2(256, 256), particle.Scaling,
                     SpriteEffects.None, 1);
             }
