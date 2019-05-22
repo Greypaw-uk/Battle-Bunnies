@@ -33,7 +33,7 @@ namespace BattleBunnies.Weapons
             {
                 currentTexture = powTexture;
 
-                if (players[currentPlayer].weaponFuse <= 0)
+                if (players[currentPlayer].WeaponFuse <= 0)
                 {
                     smokeList = new List<Vector2>();
 

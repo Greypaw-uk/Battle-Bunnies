@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Security.Permissions;
+using Microsoft.Xna.Framework;
 using static BattleBunnies.Global;
 
 namespace BattleBunnies
@@ -10,7 +11,7 @@ namespace BattleBunnies
         public Color Colour;
         public float Angle;
         public float Power;
-        public float weaponFuse;
+        public float WeaponFuse;
         public float Health;
     }
 
@@ -47,7 +48,7 @@ namespace BattleBunnies
             players = new PlayerData[numberOfPlayers];
             for (int i = 0; i < numberOfPlayers; i++)
             {
-                players[i].weaponFuse = 5.0f;
+                players[i].WeaponFuse = 5.0f;
                 players[i].IsAlive = true;
                 players[i].Colour = playerColors[i];
                 players[i].Angle = MathHelper.ToRadians(90);
@@ -56,6 +57,28 @@ namespace BattleBunnies
                 players[i].Position.X = screenWidth / (numberOfPlayers + 1) * (i + 1);
                 players[i].Position.Y = terrainContour[(int) players[i].Position.X];
                 players[i].Health = 100;
+            }
+        }
+
+        public static void PlayerDeath()
+        {
+            var _players = numberOfPlayers;
+            var _winningTeam = "";
+
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                if (!players[i].IsAlive)
+                {
+                    _players--;
+                    if (_players == 1)
+                    {
+                        // TODO Make this work!
+                    }
+                }
+                else
+                {
+                    _winningTeam = players[i].Colour.ToString();
+                }
             }
         }
     }

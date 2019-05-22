@@ -95,13 +95,13 @@ namespace BattleBunnies
                         & lastKeyboardState.IsKeyUp(Keys.F)
                         & !grenadeThrown)
                     {
-                        if (players[currentPlayer].weaponFuse < 5.0f)
+                        if (players[currentPlayer].WeaponFuse < 5.0f)
                         {
-                            players[currentPlayer].weaponFuse++;
+                            players[currentPlayer].WeaponFuse++;
                         }
                         else
                         {
-                            players[currentPlayer].weaponFuse = 1.0f;
+                            players[currentPlayer].WeaponFuse = 1.0f;
                         }
                     }
                 break;

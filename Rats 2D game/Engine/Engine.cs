@@ -76,7 +76,7 @@ namespace BattleBunnies
             {
                 currentPlayer = ++currentPlayer % numberOfPlayers;
             }
-            players[currentPlayer].weaponFuse = 5.0f;
+            players[currentPlayer].WeaponFuse = 5.0f;
             players[currentPlayer].Angle = 0;
             players[currentPlayer].Power = 0;
             equippedWeapon = EquippedWeapon.NoWeapon;

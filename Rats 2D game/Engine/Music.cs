@@ -16,16 +16,20 @@ namespace BattleBunnies
                 {
                     case GameState.TitleScreen:
                     {
+                        musicPlaying = false;
                         MediaPlayer.Stop();
                         MediaPlayer.Play(ukulele);
+                        musicPlaying = true;
                     }
-                        break;
+                    break;
                     case GameState.Playing:
                     {
+                        musicPlaying = false;
                         MediaPlayer.Stop();
                         MediaPlayer.Play(titleTheme);
+                        musicPlaying = true;
                     }
-                        break;
+                    break;
                 }
             }
         }

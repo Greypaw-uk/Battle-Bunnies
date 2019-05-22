@@ -57,7 +57,9 @@ namespace BattleBunnies
             graphics.ApplyChanges();
             Window.Title = "Battle Bunnies";
 
+            //  MISC GAME VARS
             currentTexture = powTexture;
+            musicPlaying = false;
 
             base.Initialize();
         }
@@ -189,7 +191,7 @@ namespace BattleBunnies
 
                 //  FUSE TIMER
                 var fuseBurn = (float) gameTime.ElapsedGameTime.TotalSeconds;
-                players[currentPlayer].weaponFuse -= fuseBurn;
+                players[currentPlayer].WeaponFuse -= fuseBurn;
             }
 
             //  GAME TIMER
@@ -238,15 +240,14 @@ namespace BattleBunnies
                         DrawScenery();
                         DrawPlayers();
                         DrawText();
+                        DrawPlayerHealth();
                         DrawRocket();
                         DrawGrenade();
-                        
-                        DisplayPlayerHealth();
                     spriteBatch.End();
 
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
                         DrawExplosion(currentTexture);
-                        DrawSmoke(); // TODO Move back to basic draw?
+                        DrawSmoke();
                         spriteBatch.End();
                     break;
                 }
